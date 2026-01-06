@@ -1,6 +1,6 @@
 #  Created By    : Dr. Detlef Groth
 #  Created       : Sun Oct 27 15:16:15 2019
-#  Last Modified : <210820.0830>
+#  Last Modified : <260106.1234>
 #
 #  Description	
 #
@@ -71,7 +71,7 @@
 #' It only adds an additional option __-hidenohits__ - see below for an explanation. You should not use the option __-postcomand__ as this option is used to display the dropbdown list and apply the value filtering. If you overwrite the latter option you get again just a
 #' normal ttk::combobox.
 
-package require Tk 8.5
+package require Tk 8.5-
 package require tile
 package require snit
 package require dgw::dgwutils

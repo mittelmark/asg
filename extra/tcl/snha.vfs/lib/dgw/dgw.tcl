@@ -22,7 +22,7 @@
 #' ## <a name='synopsis'>SYNOPSIS</a>
 #' 
 #' ```
-#' package require Tk 8.6
+#' package require Tk 8.6-
 #' package require snit
 #' package require dgw::dgw
 #' dgw::basegui app
