@@ -385,6 +385,26 @@ snit::widget ::dgw::hyperhelp {
         $self help $title
     }
     
+    method getEncoding {filename} {
+        set encodings {utf-8 iso8859-1 iso8859-15 iso8859-16 cp1252 cp850}
+        set all [encoding names]
+        foreach enc $all {
+            if {$enc ni $encodings} {
+                lappend encoding $enc
+            }
+        }
+        foreach enc $encodings {
+            catch {
+                set f [open $filename "r"]
+                fconfigure $f -encoding $enc
+                set data [read $f]
+                close $f
+            } err
+            if {$err eq ""} {
+                return $enc
+            }
+        }
+    }
     #'
     #' *pathName* **getTitle**
     #'
@@ -412,7 +432,9 @@ snit::widget ::dgw::hyperhelp {
     method ReadHelpFiles {} {
         set fname $options(-helpfile)
         #set fname [file join $dir help.txt]
+        set enc [$self getEncoding $fname]
         set fin [open $fname r]
+         fconfigure $fin -encoding $enc
         set data [read $fin] ; list
         close $fin
         # remove pandoc header
