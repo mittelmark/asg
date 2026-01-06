@@ -22,5 +22,5 @@ package ifneeded dgw::tablelist 0.2 [list source [file join $dir tablelist.tcl]]
 package ifneeded dgw::tlistbox 0.2 [list source [file join $dir tlistbox.tcl]]
 
 # require dgtools::shistory
-package ifneeded dgw::hyperhelp 0.8.2 [list source -encoding iso8859-1 [file join $dir hyperhelp.tcl]]
+package ifneeded dgw::hyperhelp 0.8.2 [list source [file join $dir hyperhelp.tcl]]
 

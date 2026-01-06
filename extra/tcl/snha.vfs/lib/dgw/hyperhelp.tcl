@@ -314,9 +314,13 @@ snit::widget ::dgw::hyperhelp {
             search Search history History next Next}
         array set var [list]
         set sh [::dgtools::shistory %AUTO% -home ""]
+                
         set W(top) $win
+                
         $self ReadHelpFiles
+                
         $self Help 
+
     }
     onconfigure -font value {
         #puts "configuring font"
@@ -462,10 +466,11 @@ snit::widget ::dgw::hyperhelp {
             #puts "'${title}'"
             
             set n [regexp -line {^icon:\s*(.*?) *$} $section => icon]
+            set ititle [regsub -all {[^0-9a-zA-z]} $title ""]
             if {! $n} {
-                set var("icon,$title") filenew16
+                set var(icon$ititle) filenew16
             } else {
-                set  var("icon,$title") $icon
+                set  var(icon$ititle) $icon
             }
             if {[incr x] == 1} {
                 set var(home) $title
@@ -484,11 +489,11 @@ snit::widget ::dgw::hyperhelp {
             
             regsub -all -line {^(title:|alias:|icon:).*$\n} $section {} section
             regsub -all {\[\[} $section "````" section
-            regsub -all {\]\]} $section "´´´´" section
+            regsub -all {\]\]} $section "Â´Â´Â´Â´" section
             regsub -all {\[} $section "``" section
-            regsub -all {\]} $section "´´" section
+            regsub -all {\]} $section "Â´Â´" section
             regsub -all {````} $section "\[" section
-            regsub -all {´´´´} $section "\]" section
+            regsub -all {Â´Â´Â´Â´} $section "\]" section
             #set i [interp create -safe]
             #interp eval $i package require tdbc
             # not available in save interpr
@@ -508,7 +513,7 @@ snit::widget ::dgw::hyperhelp {
             #$i eval subst $section
             
             regsub -all {``} $section "\[" section
-            regsub -all {´´} $section "\]" section
+            regsub -all {Â´Â´} $section "\]" section
             #puts "adding $title"
             $self AddPage $title $aliases $section
         }
@@ -881,7 +886,6 @@ snit::widget ::dgw::hyperhelp {
         pack [button $TOP.status.forward -image navforward16  -relief groove -borderwidth 2 -state disabled \
               -command [mymethod Show Forward]]  -padx 3 -pady 4 -side left     -ipadx 2 -ipady 2
         set W(forward) $TOP.status.forward 
-        
         #    pack [button $TOP.status.last -image finish-16  -relief groove -borderwidth 2 -state disabled]  -padx 3 -pady 4 -side left     -ipadx 2 -ipady 2
         pack [ttk::separator $TOP.status.sep -orient vertical] -side left -expand false -padx 5 -fill y -pady 3
         #   pack [button $TOP.status.bl -image playstart16 -command { puts First } -relief groove -borderwidth 2] -side left -padx 2
@@ -893,18 +897,15 @@ snit::widget ::dgw::hyperhelp {
         bind $TOP.status.e <Return> [mymethod DoToolSearch]
         pack [button $TOP.status.be -text Search! -command [mymethod DoToolSearch]] -side left -padx 5
         frame $TOP.bottom -bd 2 -relief ridge
-        
         button $TOP.b -text "Dismiss" -command [list destroy [winfo parent $TOP]]
         if {$options(-dismissbutton)} {
             pack $TOP.bottom -side bottom -fill both
             pack $TOP.b -side bottom -expand 1 -pady 10 -in $TOP.bottom
         }
-        
         set P $TOP.p
         if {$::haveTile078} {                       ;# Need tags on treeview
             set state(haveTOC) 1
             ::ttk::panedwindow $P -orient horizontal
-            
             pack $P -side top -fill both -expand 1
             frame $P.toc -relief ridge
             frame $P.help -bd 2 -relief ridge
@@ -920,7 +921,6 @@ snit::widget ::dgw::hyperhelp {
             pack $P -side top -fill both -expand 1
             $self CreateHelp $P
         }
-
         #bind $TOP <Map> [list apply { TOP {
         #    bind $TOP <Map> {}
         #    CenterWindow $TOP 
@@ -936,7 +936,6 @@ snit::widget ::dgw::hyperhelp {
         set W(tree) $TOC.tree
         ttk::scrollbar $TOC.sby -orient vert -command "$W(tree) yview"
         #scrollbar $TOC.sbx -orient hori -command "$W(tree) xview"
-        
         ::ttk::treeview $W(tree) -padding {2 2 2 2} -selectmode browse \
               -yscrollcommand "$TOC.sby set" ;#$ -xscrollcommand "$TOC.sbx set"
         # todo: must be recalled after font changes !! (Done)
@@ -949,7 +948,6 @@ snit::widget ::dgw::hyperhelp {
         #grid $TOC.sbx -sticky ew
         grid rowconfigure $TOC 0 -weight 1
         grid columnconfigure $TOC 0 -weight 1
-        
         $W(tree) heading #0 -text "Table of Contents"
         $W(tree) tag configure link -foreground blue
         # NB. binding to buttonpress sometimes "misses" clicks
@@ -1432,20 +1430,18 @@ snit::widget ::dgw::hyperhelp {
         #$W(tree) configure -padding {50 10 2 2}
         unset -nocomplain parent
         set parent() {}
-        
         regsub -all {'{2,}} $tocData {} tocData
         regsub -all {\(#.+?\)} $tocData "" tocData
         regsub -all { {4,5}([-*+]) }   $tocData  "    \\1\\1 " tocData
         #puts $tocData
         foreach line [split $tocData \n] {
-            
             set n [regexp {^\s{1,}([-*]+)\s*(.*)} $line => dashes txt]
             if {! $n} continue
-            
             set isLink [regexp {^\[(.*)\]$} $txt => txt]
             set pDashes [string range $dashes 1 end]
-            if {[info exists var("icon,$txt")]} {
-                set icon $var("icon,$txt")
+            set icotxt [regsub  -all {[^0-9A-Za-z]} $txt ""]
+            if {[info exists var(icon$icotxt)]} {
+                set icon $var(icon$icotxt)
             } else {
                 set icon filenew16
             }
