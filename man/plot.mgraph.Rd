@@ -35,7 +35,7 @@ identical(M,t(M))
 
 }
 \seealso{
-\link{plot.asg}{plot.asg(x)}
+\link[asg:plot.asg]{plot.asg(x)}
 }
 \author{
 Detlef Groth, Cedric Moris

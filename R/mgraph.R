@@ -489,7 +489,7 @@ mgraph.nodeColors <- function (g,col=c("skyblue","grey80","salmon")) {
 #' 
 #' @author Detlef Groth, Cedric Moris
 #' 
-#' @seealso \link{plot.asg}{plot.asg(x)}
+#' @seealso \link[asg:plot.asg]{plot.asg(x)}
 #' 
 
 plot.mgraph = function (x, layout='sam',...) {
