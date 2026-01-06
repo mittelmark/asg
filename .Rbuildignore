@@ -1,2 +1,4 @@
 extra/*
+repo/*
 Makefile
+snha-gui.vfs/*

@@ -14,8 +14,8 @@ CURRENT_MAKEFILE := $(lastword $(MAKEFILE_LIST))
 ## argument delegation
 ARGS=
 
-pkg=asg
-func=asg
+VERSION := $(shell grep -E '^Version:' DESCRIPTION | sed 's/Version: //')
+PKG     := $(shell basename `pwd`)
 
 ## default: list existing tasks 
 .PHONY: tasks
@@ -24,13 +24,15 @@ tasks:  ## list all tasks
 
 build:
 	echo 'library(roxygen2); setwd("."); roxygenize();' | R --slave
-	echo 'library(devtools); build(".",path="repo/src/contrib");' | R --slave	
+	R CMD build .
+	#echo 'library(devtools); build(".",path="repo/src/contrib");' | R --slave	
 	#echo '.libPaths(c("~/workspace/delfgroth/myr/rlibs/",.libPaths())); library(devtools); build("$(pkg)",path="repo/src/contrib");' | R --slave	
-	echo 'library(tools); setwd("repo/src/contrib") ; library(tools); write_PACKAGES();' | R --slave	
+	#echo 'library(tools); setwd("repo/src/contrib") ; library(tools); write_PACKAGES();' | R --slave	
 	
 check:  vignette
-	R CMD build $(pkg) 
-	echo 'library(evaluate);library(devtools); check("$(pkg)");' | R --slave	
+	R CMD build .
+	R CMD check $(PKG)_$(VERSION).tar.gz
+	#echo 'library(evaluate);library(devtools); check("$(pkg)");' | R --slave	
 
 help:
 	 echo "library(mcgraph);help(mcg.cross)" | R --slave	
@@ -54,4 +56,12 @@ pandoc:
 	cd $(pkg)/vignettes &&	pandoc -s $(pkg).md -o $(pkg).html
 	cd $(pkg)/vignettes &&	pandoc -s $(pkg).md -o $(pkg).pdf
 	cd $(pkg)/vignettes &&	cp $(pkg).pdf ../doc
+
+
+linux-gui:
+	cd extra/tcl && tpack snha.tapp
+	Rscript extra/bin/rcompiler.R R/asg.R extra/R/Emil.R \
+		extra/R/tktip.R extra/R/tcltk3.R extra/R/RGui.R \
+		extra/R/RGuiPlot.R extra/R/RGuiColSelect.R extra/R/snapp.R > snapp-app.R
+		
 		
