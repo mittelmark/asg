@@ -23,7 +23,8 @@ tasks:  ## list all tasks
 	@grep -Eo '^[a-z0-9]+:.+' $(CURRENT_MAKEFILE) | sed -E 's/:\s+##/\t- /g'
 
 build:
-	echo 'library(devtools); build("$(pkg)",path="repo/src/contrib");' | R --slave	
+	echo 'library(roxygen2); setwd("."); roxygenize();' | R --slave
+	echo 'library(devtools); build(".",path="repo/src/contrib");' | R --slave	
 	#echo '.libPaths(c("~/workspace/delfgroth/myr/rlibs/",.libPaths())); library(devtools); build("$(pkg)",path="repo/src/contrib");' | R --slave	
 	echo 'library(tools); setwd("repo/src/contrib") ; library(tools); write_PACKAGES();' | R --slave	
 	
