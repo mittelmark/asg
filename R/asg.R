@@ -1,0 +1,2137 @@
+#' @title asg package - association chain graphs from correlation networks
+#' @description The asg package can b used to construct association chain graphs based on the St. Nicolas House algorithm as described in Groth et. 2019.
+#' @details The package provides the following functions:
+#' 
+#' Function for graph generation from data:
+#' \describe{
+#' \item{\link[asg:asg.new]{asg.new(data)}}{creates and returns a new asg graph}
+#' }
+#'
+#' S3 methods for asg graphs:
+#' \describe{
+#' \item{\link[asg:plot.asg]{plot.asg(asggraph)}}{plots an asg graph}
+#' \item{\link[asg:as.list.asg]{as.list.asg(asggraph)}}{return a list representation of an asg graph object}
+#' }
+#'
+#' Utility functions:
+#' \describe{
+#' \item{\link[asg:asg.getChains]{asg.getChains(asggraph)}}{returns the chains found by the algorithm as matrix}
+#' \item{\link[asg:asg.getFactors]{asg.getFactors(data,factors=0)}}{performs a factor analysis on the given data}
+#' \item{\link[asg:asg.impute]{asg.impute(x)}}{impute missing values using knn, rpart, mean or median approaches}
+#' \item{\link[asg:asg.layout]{asg.layout(g)}}{calculate layout coordinates for the given graph or adjacency matrix}
+#' \item{\link[asg:asg.ll]{asg.ll(g,chain)}}{calculate log-likelihood for the given chain of the asg graph}
+#' \item{\link[asg:asg.mdsplot]{asg.mdsplot(g)}}{do a MDS plot for the variables of a asg object}
+#' \item{\link[asg:asg.mplot]{asg.mplot(mt)}}{plots an adjacency matrix using the plotting facilities of the asg package}
+#' \item{\link[asg:asg.nd]{asg.nd(x)}}{apply network deconvolution on correlation matrices according to Feizi et al. 2013}
+#' \item{\link[asg:asg.pcaplot]{asg.pcaplot(g)}}{do a PCA score plot for a PCA object}
+#' \item{\link[asg:asg.rsquare]{asg.rsquare(data,g)}}{for given data and graph or adjacency matrix calculate linear model r-square value}
+#' }
+#' 
+#' More internal and explorative functions. Not required for standard applications:
+#' \describe{
+#' \item{\link[asg:asg.getGraphAccuracy]{asg.getGraphAccuracy(true.graph,pred.graph)}}{how close is the predicted graph to the real graph}
+#' \item{\link[asg:asg.rpart]{asg.rpart(data)}}{variable importance for prediction based on regression trees}
+#' \item{\link[asg:asg.pcadata]{asg.pcadata(x)}}{restore PCA data from a PCA object or reduce some components and then restore the data}
+#' \item{\link[asg:asg.pcheck]{asg.pcheck(asggraph)}}{checks graph for partial correlations between not yet connected nodes which might be added as edges if significant}
+#' }
+#' 
+#' Functions to create your own graphs:
+#' \describe{
+#' \item{\link[asg:mgraph.new]{mgraph.new(x=NULL,type="angie")}}{function to create different graph types}
+#' \item{\link[asg:plot.mgraph]{plot.mgraph(g)}}{plot function for a S3 mgraph object}
+#' \item{\link[asg:mgraph.autonames]{mgraph.autonames(n,prefix)}}{create names for nodes and other items}
+#' \item{\link[asg:mgraph.components]{mgraph.components(g)}}{extract graph components and the ids for each node}
+#' \item{\link[asg:mgraph.degree]{mgraph.degree(g)}}{get number of edges for a given graph}
+#' \item{\link[asg:mgraph.d2u]{mgraph.d2u(g)}}{convert a directed to an undirected graph}
+#' \item{\link[asg:mgraph.graph2data]{mgraph.graph2data(g)}}{create correlated data for a given graph}
+#' \item{\link[asg:mgraph.nodeColors]{mgraph.nodeColors(g)}}{create color codes based on in- and out-degrees for the given graph}
+#' \item{\link[asg:mgraph.nodeColors]{mgraph.nodeColors(g)}}{create color codes based on in- and out-degrees for the given graph}
+#' \item{\link[asg:mgraph.u2d]{mgraph.u2d(g)}}{convert an undirected to a directed graph}
+#' }
+#' 
+#' Below is a standard analysis pipeline using the asg graph package. We use here the swiss data as example data:
+#' @examples
+#' data(swiss)
+#' # alpha = 0.1 is recommended for smaller sample sets, default is 0.01
+#' asg=asg.new(swiss,method='spearman',alpha=0.1)
+#' plot(asg,layout='sam')
+#' # we can as well do resamplings
+#' asg=asg.new(swiss,method='spearman',alpha=0.1,prob=TRUE)
+#' plot(asg,layout='sam')
+#' asg$theta
+#' asg$probabilities
+#' @author Detlef Groth <dgroth@uni-potsdam.de>
+#' @references
+#' \itemize{
+#'    \item Groth, D., Scheffler, C., & Hermanussen, M. (2019). 
+#'    Body height in stunted Indonesian children depends directly on parental education and not 
+#'     via a nutrition mediated pathway - 
+#'     Evidence from tracing association chains by St. Nicolas House Analysis. 
+#'     \emph{Anthropologischer Anzeiger}, 76 No. 5 (2019), p. 445 - 451. \url{https://doi.org/10.1127/anthranz/2019/1027}
+#'    \item Hermanussen, M., Assmann, C. und Groth, D. (2021).
+#'    Chain Reversion for Detecting Associations in Interacting Variables - St. Nicolas House Analysis.
+#'    \emph{International Journal of Environmental Research and Public Health}. 18, 4 (2021). \url{https://doi.org/10.3390/ijerph18041741}.
+#'    \item Novine, M., Mattsson, C. C., & Groth, D. (2021).
+#'    Network reconstruction based on synthetic data generated by a Monte Carlo approach. \emph{Human Biology and Public Health}, 3:26. \url{ https://doi.org/10.52905/hbph2021.3.26}
+#' }
+#' @name asg-package
+
+NULL
+
+#' @title Create an association chain graph.
+#'
+#' @description This function returns graphs which are build from association chains.
+#' @param data A dataframe where network nodes are the rownames and data variables are in the columns.
+#' @param alpha Confidence threshold for p-value edge cutting after all chains were generated, default: 0.05.
+#' @param method Method to calculate correlation/association values, can be pearson, spearman, kendall, cor.fk (requires pcaPP package), rpart or mi (mutual information) default: 'pearson'.
+#' @param threshold R-squared correlation coefficient threshold for which r-square values should be used for chain generation, r=0.1 is r-square of 0.01, default: 0.01.
+#' @param pcor should edges with high partial correlations added, default: FALSE.
+#' @param check.singles should isolated nodes connected with sufficent high R^2 and significance, default: FALSE.
+#' @param chains.clean should shorter chains be removed if they are in longer chains, and should reverse dubplicated chains be removed, default: TRUE
+#' @param prob should be probabilities computed for each edge using bootstrapping. Only in this case the parameters starting with prob are used, default: FALSE
+#' @param prob.threshold threshold to set an edge, a value of 0.5 means, that the edge must be found in 50\% of all samplings, default: 0.2
+#' @param prob.n number of boostrap samples to be taken, default: 25
+#' @keywords network correlation
+#' @return An asg graph data object with the fields theta for the adjacency matrix, sigma for the correlation matrix, chains for the association chains and data representing the input data.
+#' @examples
+#' data(swiss)
+#' sw.g=asg.new(swiss,method='spearman')
+#' # what objects are there?
+#' ls(sw.g)
+#' sw.g$theta
+#' round(sw.g$sigma,2)
+#' par(mfrow=c(1,2))
+#' plot(sw.g,layout='sam')
+#' plot(sw.g,layout='circle')
+#' plot(sw.g,layout='star',star.center='Catholic')
+#' # resampling approach
+#' sw.g=asg.new(swiss,method='spearman',check.singles=TRUE,prob=TRUE)
+#' sw.g$theta
+#' sw.g$probablities
+#' @seealso \link[asg:plot.asg]{plot.asg}
+#' @export
+
+
+asg.new <- function (data,alpha=0.05,method='pearson',threshold=0.01,pcor=FALSE,
+                     check.singles=FALSE,chains.clean=TRUE,
+                     prob=FALSE,prob.threshold=0.2,prob.n=25) {
+    t1=Sys.time()
+    if (prob) {
+        # check for correlation matrix
+        if (nrow(data)==ncol(data) &  
+                length(which(colnames(cor(data))==rownames(cor(data)))) == nrow(data)) {
+                    stop("only data matrices, not correlation matrices, can be used for bootstrapping graphs")
+        }
+
+        as=asg.new(data,alpha=alpha,method=method,threshold=threshold,pcor=pcor,
+                   check.singles=check.singles,prob=FALSE)
+        rand.prob=as$theta
+        rand.prob[]=0
+        for (i in 1:prob.n) {
+            sam=sample(1:nrow(data),nrow(data),replace=TRUE)
+            asi=asg.new(data[sam,],alpha=alpha,method=method,threshold=threshold,pcor=pcor,
+                        check.singles=check.singles,prob=FALSE,chains.clean=chains.clean)
+            if (i == 1) {
+                as$probabilities=asi$theta
+            } else {
+                as$probabilities=as$probabilities+asi$theta
+                #recover()
+            }
+            rand.data=data
+            for (i in 1:ncol(data)) {
+                rand.data[,i]=sample(data[,i])
+            }
+            asr=asg.new(rand.data,alpha=alpha,method=method,threshold=threshold,pcor=pcor,
+                        check.singles=check.singles,prob=FALSE,chains.clean=chains.clean)
+            rand.prob=rand.prob+asr$theta
+        }
+        as$probabilities=as$probabilities/prob.n
+        rand.prob=as.vector(rand.prob)/prob.n
+        as$rand.probabilities=as$probabilities
+        as$rand.probabilities[]=rand.prob
+        as$theta[as$probabilities>=prob.threshold]=1
+        as$theta[as$probabilities<prob.threshold]=0
+        as$p.values=as$theta
+        vprob=as.vector(as$probabilities)
+        as$p.values[]=unlist(lapply(vprob,function (x) 1-length(which(x>rand.prob))/length(rand.prob)))
+    } else {
+        as=asgp$data2chainGraph(data,alpha=alpha,method=method,threshold=threshold)
+        if (pcor) {
+            for (i in 1:3) {
+                as$theta=asg.pcheck(as)
+            }
+        }
+        if (check.singles) {
+            cmt=as$sigma
+            #cor(data,method=method,use='pairwise.complete.obs')
+            if (method!= "kendall") {
+                cmt=cmt^2
+            } else {
+                cmt=abs(cmt)
+            }
+            diag(cmt)=0
+            idx=which(apply(as$theta,1,sum)==0) 
+            for (i in idx) {
+                if (max(cmt[i,])>threshold) {
+                    j=which(max(cmt[i,])==cmt[i,])
+                    options(warn=-1)
+                    if (cor.test(data[,i],data[,j])$p.value<alpha) {
+                        as$theta[i,j]=0.5
+                        as$theta[j,i]=0.5
+                    }
+                    options(warn=0)
+                }
+            }
+        }
+        as$probabilities=as$theta
+    }
+    if (chains.clean) {
+        as=ReduceChains(as)
+    } 
+    return(as)
+}
+ReduceChains = function (g) {
+    ichains=c()
+    chs=sort(names(g$chains))
+    for (cho in chs) {
+        if (length(g$chains[[cho]]) == 1) {
+            next
+        }
+        co=g$chains[[cho]]
+        for (chi in chs) {
+            if (length(g$chains[[chi]])==1) {
+                next
+                
+            }
+            if (length(g$chains[[cho]]) == 1) {
+                next
+            }
+
+            if (chi == cho) { next }
+            ci=g$chains[[chi]]
+            if (length(co)> length(ci)) { next }
+            if (length(co) == length(ci)) {
+                if (all(co==ci) | all(co==rev(ci))) {
+                    ichains=c(ichains,chi)
+                    g$chains[[chi]] = ''
+                }
+            } else {
+                cop=paste(co,collapse='')
+                cipo=paste(ci,collapse='')
+                cipr=paste(rev(ci),collapse='')
+                if (grepl(cop,cipo,fixed=TRUE)) {
+                    ichains=c(ichains,cho)
+                    g$chains[[cho]] = ''
+
+                } else if (grepl(cop,cipr,fixed=TRUE)) {
+                    ichains=c(ichains,cho)
+                    g$chains[[cho]] = ''
+                }
+            }
+            
+        }
+    }
+    for (ch in ichains) {
+        g$chains[[ch]]=NULL
+    }
+    return(g)
+}
+
+
+#' @title Measure similarity between two graphs based on edges
+#'
+#' @description This function returns similarity measures between two graphs based on predictions of edges. 
+#' The accuracy is the proportion of correctly predicted edges from all predicted edges. Also other measures, sensitivity, specificity, balanced classification rates and F1 score are releated to the predicted edges.
+#' 
+#' @param true.graph an qadjacency matrix or an asg graph object
+#' @param pred.graph an adjacency matrix or an asg graph object
+#' @return A list object with measures such as accuracy, sensitivity, specificity, balanced classification rate and F-score.
+#' @examples
+#' data(swiss)
+#' sw.g=asg.new(swiss)
+#' G=sw.g$theta # assume that this is the true graph
+#' G
+#' H=sw.g$sigma^2 # create a simple threshold based graph
+#' H[H>0.1]=1
+#' H[H<=0.1]=0
+#' diag(H)=0
+#' H
+#' asg.getGraphAccuracy(G,H)
+#' @name asg.getGraphAccuracy
+#' @export
+
+asg.getGraphAccuracy = function (true.graph,pred.graph) {
+    if (class(pred.graph)[1]=="asg") {
+        MP=pred.graph$theta
+    } else {
+        MP=pred.graph
+    }
+    if (class(true.graph)[1]=="asg") {
+        MT=true.graph$theta
+    } else {
+        MT=as.matrix(true.graph)
+    }
+
+    TP=length(which(MT[upper.tri(MT)]+MP[upper.tri(MP)] == 2  ))
+    TN=length(which(MT[upper.tri(MT)]+MP[upper.tri(MP)] == 0  ))
+    FN=length(which(MT[upper.tri(MT)]-MP[upper.tri(MP)] == 1  ))
+    FP=length(which(MT[upper.tri(MT)]-MP[upper.tri(MP)] == -1 ))
+    N=TN+FN
+    P=TP+FP
+    Sens=TPR=TP/(TP+FN)
+    Spec=TN/(FP+TN)
+    Acc=(TP+TN)/(N+P)
+    #BCR=(TP/P + TN/N)/2
+    BCR=(Sens+Spec)/2
+    MCC=(TP*TN - FP*FN)/sqrt(1.0*(TP+FP)*(TP+FN)*(TN+FP)*(TN+FN))
+    FScore=2*TP/(2*TP+FP+FN)
+    return(list(Sens=Sens,Spec=Spec,Acc=Acc,BCR=BCR,MCC=MCC,F1=FScore))
+}
+
+#' @title Imputation of missing values using rpart, knn, mean or median
+#' @description `asg.impute` imputes missing data in data frames or matrices using either
+#'   decision trees, k-nearest-neighbor approach with Euclidean distances or
+#'   simple mean and median computations for the variables.
+#' @section Details:
+#'     Many mathematical methods did not allow missing data in their inputs.
+#'     The missing values have to be guessed in this case.
+#'     The more basic approaches are replacing the NA values with the median or mean for the variable.
+#'     More advanced methods are using the mean only for a few samples which are very similar to the sample where the values is missing.
+#'     This method is called knn-imputation and uses the k-nearest neighbors (default here 5) only for computing the replacement value.
+#'     For data where the value order in the columns is of importance it is often desired to replace missing values with the mean of the two closest neighbors in the data frame or matrix, for instance if the data are ordered by time. Here the method timemean follows this approach.
+#'     The method rpart uses decision trees to impute the values, it is currently the only method to impute as well factor variables.  The advantage of the rpart method is that it can impute not only numerical values but as well factor variables.
+#'
+#' @param x the data frame or matrix with missing values.
+#' @param method which method to be used to impute the values, either 'mean', 'median', rpart, 'knn', default: 'rpart'
+#' @param k how many nearest neighbors to be used if method is 'knn', default: 5
+#' @return data with imputed values.
+#' @examples
+#' data(iris)
+#' set.seed(123)
+#' ir=as.matrix(iris[,1:4])
+#' ir.mv=ir
+#' # introduce 5 percent NA's
+#' mv=sample(1:length(ir),as.integer(0.05*length(ir)))
+#' ir.mv[mv]=NA
+#' ir.imp.med=asg.impute(ir.mv,method='median') # not good
+#' ir.imp.rpart=asg.impute(ir.mv,method="knn") # method rpart 
+#' ir.imp.knn=asg.impute(ir.mv,method='knn') # (default)
+#' rmse = function (x,y) { return(sqrt(sum((x-y)^2))) }
+#' rmse(ir[mv],ir.imp.med[mv]) # should be high
+#' rmse(ir[mv],ir.imp.rpart[mv]) # should be low!
+#' rmse(ir[mv],ir.imp.knn[mv]) # should be low!
+#' cor(ir[mv],ir.imp.med[mv])
+#' cor(ir[mv],ir.imp.rpart[mv])
+#' cor(ir[mv],ir.imp.knn[mv]) # should be high!
+#' # factor variables
+#' data(iris)
+#' ciris=iris
+#' idx=sample(1:nrow(ciris),15) # 10 percent NA's
+#' ciris$Species[idx]=NA
+#' summary(ciris)
+#' ciris=asg.impute(ciris,method="rpart")
+#' table(ciris$Species[idx],iris$Species[idx])
+#' @name asg.impute
+#' @import rpart
+#' @export
+#' @seealso \link{asg.new}.
+#' @author Detlef Groth <email: dgroth@uni-potsdam.de>
+
+asg.impute <- function (x,method='rpart',k=5) {
+    if (method %in% c('mean','median')) {
+        if (is.data.frame(x) | is.matrix(x)) {
+            for (i in 1:ncol(x)) {
+                x[,i]=asg.impute(x[,i],method=method)
+            }
+        } else {
+            if (method == "median") {
+                mn=median(x,na.rm=TRUE)
+            } else {
+                mn=mean(x,na.rm=TRUE)
+            }
+            idx=which(is.na(x))
+            x[idx]=mn
+        }
+        return(x)
+    } else if (method == "rpart") {
+        # TODO: refinement for many variables,
+        # take only variables with highest absolute correlation
+        # into account if more than 10 variables take top 10
+        idata=x
+        for (i in 1:ncol(x)) {
+            idx = which(!is.na(x[,i]))
+            if (length(idx) == nrow(x)) {
+                next
+            }
+            if (is.factor(x[,i])) {
+                model=rpart::rpart(formula(paste(colnames(x)[i],"~.")),
+                            data=as.data.frame(x[idx,]),
+                            method="class")
+                x2 = predict(model,newdata=as.data.frame(x[-idx,]),
+                             type="class")
+            } else {
+                model=rpart::rpart(formula(paste(colnames(x)[i],"~.")),
+                            data=as.data.frame(x[idx,]))
+                x2 = predict(model,newdata=as.data.frame(x[-idx,]))
+            }
+
+            idata[-idx,i]=x2
+        }
+        return(idata)
+    } else if (method == "knn") {
+        if (ncol(x) < 4) {
+            stop("knn needs at least 4 variables / columns")
+        }
+        data.imp=x
+        #D=as.matrix(1-((cor(t(data.imp),use="pairwise.complete.obs")+1)/2))
+        D=as.matrix(dist(scale(data.imp)))
+        for (i in 1:ncol(x)) {
+            idx=which(is.na(x[,i]))
+            idxd=which(!is.na(x[,i]))
+            for (j in idx) {
+                idxo=order(D[j,])
+                idxo=intersect(idxo,idxd)
+                mn=mean(x[idxo[1:k],i])
+                data.imp[j,i]=mn
+            }
+        }
+        return(data.imp)
+    } else {
+        stop("Unkown method, valid methods are rpart, knn, mean or median")
+    }
+}
+#' <a name="nd"> </a>
+#' @title network deconvolution based on Feizi et. al. 2013
+#' 
+#' @description Return a network deconvolved data matrix using the algorithm of Feizi et. a. 2013.
+#' This function is a R implementation for "A General Method to Distinguish Direct Dependencies over Networks" by Feizi et. al (2013). For the Matlab code look here:
+#' \url{http://compbio.mit.edu/nd/code/ND.m}
+#'
+#' 
+#' @param x symmetric relevance matrix, where high similarity between nodes is expressed with high values such as in a correlation matrix
+#' @param beta scaling paramater, the largest absolute eigenvalue is mapped to beta, values should be between 0 and 1, default: 0.99
+#' @param alpha fraction of edges of the observed dependency matrix to be kept, should be between 0 (none) and 1 (all), default: 1
+#' @param control if FALSE only direct weights are displayed, if TRUE also non-observed interactions are displayed, default: FALSE
+#'
+#' @examples
+#' options(width=100)
+#' data(swiss)
+#' swissr=cbind(swiss,Rand=rnorm(nrow(swiss)))
+#' mat=cor(swissr,method="pearson")
+#' round(mat,2)
+#' round(abs(mat),2)
+#' round(asg.nd(abs(mat)),2)
+#' round(asg.nd(abs(mat),alpha=0.2,beta=0.9),2)
+#' round(asg.nd(abs(mat),alpha=0.2,beta=0.9,control=TRUE),2)
+#'
+#' @references
+#' \itemize{
+#' \item Feizi, S., Marbach, D., Médard, M., & Kellis, M. (2013). Network deconvolution as a general method to distinguish direct dependencies in networks.
+#'     \emph{Nature Biotechnology}, 31(8), 726-733. \url{https://doi.org/10.1038/nbt.2635}
+#' } 
+#' 
+#' @author
+#' \itemize{
+#'  \item Soheil Feizi, KELLIS-LAB, Matlab code
+#'  \item Detlef Groth, University of Potsdam, R code
+#' }
+#' 
+#' @export
+#' 
+asg.nd = function (x,beta=0.99,alpha=1,control=FALSE) {
+   n = ncol(x)
+   diag(x)=0
+   y=quantile(x,1-alpha,type=5)
+   mat_th=x
+   mat_th[mat_th<y]=0
+   mat_th=(mat_th+t(mat_th))/2
+   E=eigen(mat_th)
+   lam_n=abs(min(E$values))
+   lam_p=abs(max(E$values))
+   m1=lam_p*(1-beta)/beta;
+   m2=lam_n*(1+beta)/beta;
+   m=max(m1,m2);
+   E$values=E$values/(m+E$values)
+   EV=matrix(0,nrow=n,ncol=n)
+   diag(EV)=E$values
+   mat_new1=E$vectors %*% EV %*% t(E$vectors)
+   if (!control) {
+       ind_edges = (mat_th>0)*1.0;
+       ind_nonedges = (mat_th==0)*1.0;
+       m1 = max(x * ind_nonedges); # yes * as checked by Octave Op: .* is like * in R
+       m2 = min(mat_new1);
+       mat_new2 = (mat_new1+max(m1-m2)) * ind_edges + (x * ind_nonedges);
+   } else {
+       m2=min(mat_new1)
+       mat_new2 = (mat_new1+max(-m2,0));
+   }
+   m1 = min(mat_new2);
+   m2 = max(mat_new2);
+   mat_nd = (mat_new2-m1) / (m2-m1);
+   rownames(mat_nd)=colnames(mat_nd)=colnames(x)
+   return(mat_nd)
+}
+
+#' @title Check graph for edge additions using linear models.
+#'
+#' @description This is a utility function to add edges if the linear
+#' model for a node, which is created by using connected nodes, can be
+#' improved by adding other nodes which have significant correlations pairwise
+#' correlations.
+#' 
+#' @param graph an asg graph object
+#' @param rs.threshold threshold for the required increase in the adjusted r-square value
+#' @param .iter internal variable to measure the number of iterations, 
+#'      after 5 iterations the process is stopped
+#' @return an asg graph object with possible added edges
+#' @examples
+#' set.seed(123)
+#' par(mfrow=c(2,2),mai=rep(0.4,4))
+#' W=mgraph.new(type="werner")
+#' plot(W,layout="circle")
+#' data=mgraph.graph2data(W,iter=100,prop=0.02)
+#' A = asg.new(t(data),method="spearman",alpha=0.1)
+#' plot(A,layout="circle")
+#' B = asg.cm(A)
+#' plot(B,layout="circle")
+#' @export
+#' 
+
+asg.cm <- function (graph,rs.threshold=0.02,.iter=0) {
+    # determine the possible checks
+    T=graph$p.values<0.1 & graph$theta==0 & abs(graph$sigma)>0.1
+    diag(T)=FALSE
+    # result vector, current adj,r.square values
+    l=rep(0,nrow(T))
+    names(l)=colnames(T)
+    data=as.data.frame(graph$data)
+    # gain values
+    RS=graph$theta
+    RS[]=0
+    for (i in 1:nrow(T)) {
+        ncols=colnames(T)[T[i,]]
+        cols=colnames(T)[graph$theta[i,]>0]
+        if (length(cols)==0) {
+            rs1=0
+        } else {
+            frm=formula(paste(colnames(T)[i],"~",paste(cols,collapse="+")))
+            rs1=summary(lm(frm,data=data))$adj.r.squared
+        }
+        l[i]=rs1
+        for (col in ncols) {
+            frm=formula(paste(colnames(T)[i],"~",paste(c(cols,col),collapse="+")))
+            rs2=summary(lm(frm,data=data))$adj.r.squared
+            RS[i,col]=rs2
+        }
+    }
+    diag(RS)=l
+    A=RS
+    A[]=0
+    # gain in r.sqaure values
+    # TODO: only add one edge per iteration for every node
+    #A[RS-diag(RS)>rs.threshold]=1
+    nnodes=colnames(T)[which(diag(round(RS-apply(RS,1,max),2)< -rs.threshold))]
+    for (node in nnodes) {
+        idx=which(RS[node,]==max(RS[node,]))
+        A[node,idx]=1
+        A[idx,node]=1
+        bnode=colnames(A)[idx]
+        if (RS[node,idx]>RS[idx,node]) {
+            key=paste("c-chain",node,sep="-")
+            graph$chains[[key]]=c(node,bnode)
+        } else {
+            key=paste("c-chain",bnode,sep="-")
+            graph$chains[[key]]=c(bnode,node)
+        }
+    }
+    # any changes found?
+    if (sum(A)>0 & .iter < 6) {
+        .iter=.iter+1
+        # yes, redo do add may be more edges
+        # should be recursive
+        # migh guard against endless itereation
+        graph$theta=graph$theta+A
+        graph$probabilities=graph$probabilities+A
+        graph=asg.cm(graph,rs.threshold=rs.threshold,.iter=.iter)
+    }
+    return(graph)
+}
+
+#' @title Measure time and quality of an graph prediction.
+#'
+#' @description This is a utility function to measure the executation time
+#' and the quality of the graph prediction using the sensitivity, specificity and
+#' Matthews Correlation coefficient.
+#' 
+#' @param g the true graph, either an asg graph object or and adjacency matrix
+#' @param FUN the function to do the prediction, should only return the adjacency matrix
+#' @param \ldots additional arguments passed to FUN
+#' @return list with the components time, SENS, SPEC and MCC
+#' @examples
+#' set.seed(123)
+#' W=mgraph.new(type="werner")
+#' data=t(mgraph.graph2data(W,iter=50,prop=0.02))
+#' res = asg.bench(W,FUN=function() { asg.new(data,method="spearman",alpha=0.1) })
+#' unlist(res)
+#' res = asg.bench(W,FUN=function() { asg.new(data,method="spearman",alpha=0.1,prob=TRUE) })
+#' unlist(res)
+#' AN=mgraph.new(type="angie",nodes=20,edges=30)
+#' plot(AN)
+#' data=t(mgraph.graph2data(AN))
+#' unlist(asg.bench(AN, function () { 
+#'    return(asg.new(data,method="spearman",alpha=0.1,prob=FALSE)$theta) }))
+#' unlist(asg.bench(AN, function () { 
+#'    return(asg.new(data,method="spearman",alpha=0.1,prob=TRUE)$theta) }))
+#' @export
+#' 
+
+asg.bench <- function (g,FUN,...) {
+    t1=Sys.time()
+    p=FUN(...)
+    acc=asg.getGraphAccuracy(g,p)
+    t=difftime(Sys.time(),t1,units="secs")[[1]]
+    return(list(time=t,SENS=acc$Sens,SPEC=acc$Spec, MCC=acc$MCC))
+}
+
+#' @title Check graph for partial correlations.
+#'
+#' @description This is a utiltiy function to check existing edges in an asg graph object for 
+#' significant partial correlations.
+#' 
+#' @param graph an asg graph object
+#' @return a adjacency matrix where edges are checked for partial correlations.
+#' @examples
+#' data(swiss)
+#' sw.g=asg.new(swiss)
+#' M=asg.pcheck(sw.g)
+#' @export
+
+asg.pcheck = function (graph) {
+    # todo check if cor.matrix
+    # assume data matrix
+    A=graph$theta
+    S=graph$sigma
+    N=A
+    data=graph$data
+    # for every node with degree of 2 or greater
+    idx=names(which(apply(A,1,sum)>1) )
+    for (node in sample(idx)) {
+        nghs=names(which(A[node,]>0))
+        for (n in 1:(length(nghs)-1)) {
+            for (m in n:length(nghs)) {
+                if (n != m) {
+                    if (A[nghs[m],nghs[n]]==0) {
+                        # add significant partial correlations
+                        pc=asg.pcor.test(data[,nghs[n]],data[,nghs[m]],data[,node])
+                        if(pc$p.value<0.01 && pc$estimate>0.2) {
+                            N[nghs[m],nghs[n]]=1
+                            N[nghs[n],nghs[m]]=1
+                        } 
+                        # remove non significant partial correlations
+                        pc=asg.pcor.test(data[,node],data[,nghs[m]],data[,nghs[n]])
+                        if(pc$p.value>0.1) {
+                            N[nghs[m],node]=0
+                            N[node,nghs[m]]=0
+                        }
+                        pc=asg.pcor.test(data[,node],data[,nghs[n]],data[,nghs[m]])
+                        if(pc$p.value>0.1) {
+                            N[nghs[n],node]=0
+                            N[node,nghs[n]]=0
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return(N)
+    # for every pair of neighbor nodes
+    # check partial correlation 
+}
+#' @title Return the chains of an asg graph as data frame
+#'
+#' @description This is a utiltiy function to return the chains which constructs the graph as a matrix.
+#' 
+#' @param graph an asg graph object
+#' @return A matrix with one chain per row. Shorter chains are filled up with empty strings.
+#' @examples
+#' data(swiss)
+#' sw.g=asg.new(swiss)
+#' asg.getChains(sw.g)
+#' @export
+
+asg.getChains = function (graph) {
+    mx=max(as.numeric(lapply(graph$chains,length)))
+    l=length(as.numeric(lapply(graph$chains,length)))
+    mt=matrix("",nrow=l,ncol=mx+1)
+    colnames(mt)=c("Name",paste("Node",1:mx,sep=""))
+    for (n in 1:length(names(graph$chains))) {
+        name=names(graph$chains)[n]
+        mt[n,1]=name
+        for (m in 1:length(graph$chains[[name]])) {
+            mt[n,m+1]=graph$chains[[name]][m]
+        }
+    }
+    return(mt)
+}
+#' @title Performs a simple factor analysis and performs the Factor ids.
+#'
+#' @description This function returns a list with two elements the factor analysis ids for each variable and a factor analysis object of class factanal.
+#' 
+#' @param x A formula or a numeric matrix or an object that can be coerced to a numeric matrix.
+#' @param factors The number of factor to be fitted. If 0 is given the function will select the number of factors which explain more than 90\% of the variablity of the data set or the the maximum possible number of factors.
+#' @param na.omit What do with missing values, if TRUE all rows and columns with missing values will be deleted, if FALSE an error is thrown, default: FALSE
+#' @param \dots Arguments delegated to the factanal function.
+#' @return A list object with factor ids, proportional variance and the factanal object.
+#' @examples
+#' data(swiss)
+#' fact=asg.getFactors(swiss)
+#' fact$ids
+#' fact$var
+#' plot(asg.new(swiss),hilight.factors=TRUE,factors=2)
+#' @importFrom stats factanal
+#' @export
+
+asg.getFactors = function (x,factors=0,na.omit=TRUE,...) {
+    f=factors
+    nx=na.omit(x)
+    if (!all(dim(nx)==dim(x))) {
+        if (!na.omit) {
+            stop("Data contain NA's, either impute data or use na.omit=TRUE to calculate factors without NA's")
+        } else {
+            x=nx
+            warning("Values missing, all rows and columns with missing values were deleted!")
+        }
+    }
+    if (f==0) {
+        for (i in 2:10) {
+            f=i
+            fact=factanal(x,f,...)
+            sums=colSums(fact$loading*fact$loading)/dim(fact$loading)[1]
+            cs=cumsum(sums)[1]
+            cumvar=cs[[length(cs)]]
+
+            if (fact$dof==0) {
+                break
+            }
+
+            if (cumvar>0.9) {
+                break
+            }
+        }
+    }
+
+    fact=factanal(x,f,...)
+    sums=colSums(fact$loading*fact$loading)/dim(fact$loading)[1]
+    cs=cumsum(sums)[1]
+
+    res=t(apply(fact$loadings[,],1,function(x) { return(which(x==max(x))) }))
+    return(list(ids=res[1,],var=sums,fact=fact))
+}
+
+#' @title Restores data out of a PCA with possible component reduction
+#'
+#' @description This function allows the calculation of the original data out of a PCA object with an option to diminish or to even remove the effect of specific components. If an original data frame or matrix is given a PCA is performed and thereafter the data caluclation is done, the latter should be used obviously only if your intention is to remove or reduce the effect of one or more components.
+#' 
+#' @param x A PCA or a data frame or matrix with data.
+#' @param scale in scale original data are given, should the data being scaled in the PCA
+#' @param reduce list object with PC1 ... PCn as names and numerical values from 0 and 1 where 1 means keep the data and 0 means the complete removal of the component, default: NULL
+#' @param na.omit What do with missing values, if TRUE rows  with missing values will be deleted, if FALSE an error is thrown, default: TRUE
+#' @return a data matrix with variables in the columns
+#' @examples
+#' data(swiss)
+#' head(swiss)
+#' swiss2=asg.pcadata(swiss[,1:4],scale=FALSE)
+#' head(swiss2) # the same
+#' swiss3=asg.pcadata(swiss[,1:4],reduce=list(PC1=0.5))
+#' head(swiss3) # reduced
+#' swiss4=asg.pcadata(swiss[,1:4],reduce=list(PC1=0.0))
+#' head(swiss4) # removed
+#' @export
+
+asg.pcadata = function (x,scale=TRUE,reduce=NULL,na.omit=TRUE) {
+    toData = function (pca) {
+        if (!is.logical(pca$scale)) {
+            data=t(t(pca$x %*% t(pca$rotation)) * pca$scale + pca$center)   
+        } else {
+            data=t(t(pca$x %*% t(pca$rotation)) + pca$center)
+        }
+        return(data)
+    }
+    if (class(x)[1]=="prcomp") {
+        for (n in names(reduce)) {
+            x$rotation[,n]=x$rotation[,n]*reduce[[n]]
+        }
+        data=toData(x)
+        return(data)
+    } else {
+        # matrix or data frame
+        if (na.omit) {
+            x=na.omit(x)
+        }
+        if (scale) {
+            x=scale(x)
+        }
+        pca=prcomp(x,scale=scale)
+        data=asg.pcadata(pca,reduce=reduce)
+        return(data)
+    }
+}
+# private functions to implement the functionality
+asgp=new.env()
+
+asgp$getChains = function (cor.mt, square=TRUE,top=10, 
+                           threshold=0.01, maxl=3) {
+  
+  getMiddleChain = function (forchain,mt2) {
+    res=c()
+    for (fi in 2:(length(forchain)-1)) {
+      fl=forchain[fi]
+      found=FALSE
+      for (si in (fi+1):length(forchain)) {
+        sl=forchain[si]
+        mt2=mt2[order(mt2[,sl],decreasing = TRUE),]
+        schain=rev(rownames(mt2))
+        mt2=mt2[order(mt2[,fl],decreasing = TRUE),]                    
+        fchain=rownames(mt2)
+        if (identical(fchain,schain)) {
+          # collect results
+          res=fchain        
+          found = TRUE
+          break
+        }
+      }
+      if (found) { break }
+    }
+    return(res)
+  }
+  # remove non-correlated values
+  #cor.mt[abs(cor.mt)<0.05]=0
+  cor.mt=abs(cor.mt)
+  if (square) {
+    cor.mt=cor.mt^2
+  } else {
+    threshold=0.1
+  }
+  if (top>nrow(cor.mt)) {
+    top=nrow(cor.mt)
+  }
+  results=list()
+  chained=list()
+  for (i in 1:ncol(cor.mt)) {
+    # for each node create a r-ordered list of nodes
+    node=colnames(cor.mt)[i]
+    mt=cor.mt[order(cor.mt[,i],decreasing = TRUE),][1:top,]
+    # ignore nodes without any correlation to any other node
+    # might be ignored
+    # initial full chain
+    chain=rownames(mt)
+    cor.mt2=cor.mt[chain,chain]
+    j = length(chain)
+    lchain=chain[j]
+    mt=cor.mt2[order(cor.mt2[,lchain],decreasing = TRUE),]
+    # reverse chain
+    revchain=rev(rownames(mt))
+    forchain=chain
+    # as long reversed revchain and chain are different
+    # shorten  until the same chain ist found in both
+    # or it is to short
+    # direct chains
+    l=length(forchain)
+    while (l>maxl) {
+      l=l-1
+      lchain=chain[l]
+      forchain=forchain[1:l]
+      mt2=cor.mt2[forchain,forchain]
+      mt2=mt2[order(mt2[,lchain],decreasing = TRUE),]
+      if (abs(mt2[nrow(mt2),lchain])<threshold) {
+        next
+      }
+      # revchain is shorter automatically
+      # as we have reduced mt2
+      revchain=rev(rownames(mt2))
+      if (identical(revchain,forchain)) {
+        # collect results
+        key=paste("a-chain-",node,sep="")
+        results[[key]]=forchain        
+        break
+      }
+      # otherwise
+      # new: try all chains with node inside, not only 
+      # in the beginning as above
+      res=getMiddleChain(forchain,mt2)
+      if (length(res) > 0) {
+        key=paste("m-chain-",node,sep="")
+        results[[key]]=res
+        break ;# todo remove break??
+        }
+    }
+  }
+  return(results);
+}
+
+asgp$chains2edgelists = function (chainlist) {
+    self=asgp
+    edgelists=c()
+    for (name in names(chainlist)) {
+        for (i in seq(1,length(chainlist[[name]])-1,by=1)) {
+            edgelists=c(edgelists,paste(chainlist[[name]][i],chainlist[[name]][i+1],sep="--"))
+        }
+    }
+    return(edgelists)
+}
+
+asgp$data2chainGraph = function (data,method='pearson',
+                                square=TRUE,
+                                threshold=0.01,maxl=3,top=10,
+                                p.adjust='none',
+                                alpha=0.01,
+                                cor.p.value=NULL) {
+    self=asgp
+    if (nrow(data)==ncol(data) &&  
+        length(which(colnames(data)==rownames(data))) == nrow(data)) {
+        if (max(data)>1) {
+            stop("symmetric matrices must be correlation matrices")
+        }
+        cormt=data
+        if (length(cor.p.value)==0) {
+            # pseudo p-values
+            # will add 1's later
+            cor.p.value=matrix(0,nrow=nrow(data),ncol=nrow(data))
+        }
+        
+    } else {
+        if (method == "mi") {
+            mi=asg.mutualInfo(data)
+            mi=mi/max(mi)
+            cormt=mi
+            cor.p.value=matrix(0,nrow=nrow(data),ncol=nrow(data))
+            square=FALSE;threshold=0.001
+        } else if (method == "rpart") {
+            rp=asg.rpart(data,correct=TRUE)
+            rp=rp/apply(rp,1,sum)
+            for (i in 1:(ncol(rp)-1)) {
+                for (j in i:ncol(rp)) {
+                    rp[j,i]=rp[i,j]=max(c(rp[j,i],rp[i,j]))
+                }
+            }
+
+            cormt=rp
+            cor.p.value=matrix(0,nrow=nrow(data),ncol=nrow(data))
+            square=FALSE;threshold=0.1
+        } else if (method == "cor.fk") {
+            if (!require("pcaPP")) {
+                stop("Error: method cor.fk requires package pcaPP, please install it!")
+            }
+            cormt=matrix(1,nrow=ncol(data),ncol=ncol(data))
+            rownames(cormt)=colnames(cormt)=colnames(data)
+            for (i in 1:(ncol(data)-1)) {
+                for (j in (i+1):ncol(data)) {
+                    idx=which(!is.na(data[,i]) & !is.na(data[,j]))
+                    cormt[i,j]=cormt[j,i]=cor.fk(data[idx,i],data[idx,j])
+                }
+            }
+            cor.p.value=cormt
+            cor.p.value[]=0
+            cor.p.value[abs(cormt<0.01)]=1
+        } else {
+            options(warn=-1)
+            cormt=cor(data,method=method,use='pairwise.complete.obs')
+            if (method == "kendall") {
+                square=TRUE
+                cormt=cormt
+            }
+            options(warn=0)
+            #cormt[is.na(cormt)]=0
+            cor.p.value=self$corTest(data,method=method,p.adjust=p.adjust)$p.value 
+
+        }
+    }
+    #print(threshold)
+    # if all pairs are NA
+    cor.p.value[is.na(cormt)]=1
+    cormt[is.na(cormt)]=0
+    chains=self$getChains(cormt,square=square,threshold=threshold,
+                          maxl=maxl,top=top)
+    edgelist=self$chains2edgelists(chains)
+    A=matrix(0,nrow=ncol(data),ncol=ncol(data))
+    colnames(A)=rownames(A)=colnames(data)
+    for (edge in edgelist) {
+        # print(edge)
+        nodes=strsplit(edge,"--")[[1]]
+        A[nodes[1],nodes[2]]=A[nodes[2],nodes[1]]=1
+    }
+    if (max(cor.p.value)==0) {
+        # cor matrix was given
+        # set all non edges to not significant
+        # as we can't calculate p-values
+        cor.p.value[A==0]=1
+    }
+    if (alpha < 1) {
+        # remove non signif edges
+        A=self$removeNonsignifGraphEdges(A,cor.p.value,alpha=alpha)
+    }
+    asgm=list(theta=A,p.values=cor.p.value,data=data,sigma=cormt,
+              method=method,threshold=threshold,alpha=alpha,chains=chains,data=data)
+    class(asgm)="asg"
+    return(asgm)
+}
+
+asgp$corTest = function (data,method='pearson',p.adjust='none') {
+    self=asgp
+    options(warn=-1)
+        
+    cor.p.values <- function(r, n) {
+        df <- n - 2
+        STATISTIC <- c(sqrt(df) * r / sqrt(1 - r^2))
+        p <- pt(STATISTIC, df)
+        return(2 * pmin(p, 1 - p))
+    }
+    
+    
+    pmatrix = function (M,method="pearson") {
+        P=matrix(0,ncol=ncol(M),nrow=ncol(M))
+        
+        rownames(P)=colnames(P)=colnames(M)
+        if (method=="spearman") {
+            M=apply(M,2, rank,na.last="keep")
+        }
+        r=cor(M,use="pairwise.complete.obs")
+        ncd=ncol(M)
+        #N=unlist(sapply(1:(ncd-1), function(i) sapply((i+1):ncd, function(j) nrow(na.omit(M[,c(i,j)])))) )
+        #print(length(N))
+        N=c()
+        for (i in 1:(ncd-1)) {
+            for (j in (i+1):ncd) {
+                N=c(N,nrow(na.omit(M[,c(i,j)])))
+            }
+        }
+        P[upper.tri(P)]=apply(cbind(r=r[upper.tri(r)],N=N),1, function (x) cor.p.values(x[1],x[2]))
+        P[lower.tri(P)]=t(P)[lower.tri(P)]
+        return(list(r=r,P=P))
+    }
+
+    if (method=="pearson" | method == "spearman") {
+        res=pmatrix(data,method=method)
+        cor.mt=res$r
+        p.value=res$P
+        diag(p.value)=0
+        diag(cor.mt)=1
+    } else {
+        cor.mt=cor(data,method=method,use='pairwise.complete.obs')
+        p.value=matrix(0,nrow=ncol(data),ncol=ncol(data))
+        ncd=ncol(data)
+        # this is not faster anymore with modern R versions
+        #N=sapply(1:(ncd-1), function(i) sapply((i+1):ncd, function(j) nrow(omit.na(data[,c(i,j)])))) 
+        #                                     function(j) {
+        #                                         p.value[i,j]=p.value[j,i]=cor.test(data[,i],data[,j],method=method)$p.value
+        #                                     }))
+        for (i in 1:(ncd-1)) {
+            for (j in (i+1):ncd) {
+                p.value[i,j]=p.value[j,i]=cor.test(data[,i],data[,j],method=method,exact=FALSE)$p.value
+            }
+        }
+    }
+    options(warn=0)
+    rownames(p.value)=colnames(p.value)=colnames(data)
+    if (p.adjust != "none") {
+        #print("correcting")
+        p.adj=p.adjust(p.value[upper.tri(p.value)],method=p.adjust)
+        p.value[upper.tri(p.value)]=p.adj
+        p.value[lower.tri(p.value)]=t(p.value)[lower.tri(p.value)]
+        
+    }
+    
+    return(list(r=cor.mt,p.value=p.value,p.adjust=p.adjust))
+}
+
+asgp$removeNonsignifGraphEdges = function (A,p.value,alpha=0.05,...) {
+    self=asgp
+    if (sum(A)==0) {
+        return(A)
+    }
+    #print(p.value)
+    dels=c()
+    for (i in 1:(ncol(A)-1)) {
+        for (j in i:(ncol(A))) {
+            if (p.value[i,j] > alpha) {
+                A[i,j]=A[j,i]=0
+            }
+        } 
+    }
+    return(A)
+}
+asgp$new = function (data) {
+    self=asgp
+    # to A
+    # save layouts MDS, circle
+    # methods plots
+    #return(list(A,mds.layout))
+}
+
+# methods for asg graph
+
+#' @title `plot.asg` display of network and correlation matrices of asg graphs.
+#' @description The function `plot.asg` provides a simple display of network graphs correlation matrices using 
+#' filled circles (vertices) to represent variables and edges which connect the vertices with high absolute. 
+#' correlation values. Positive correlations are shown in black, negative correlations are shown in red. For more information see the details section.
+#' 
+#' @details This is a small plot utility to display networks or correlation matrices of asg graph objects. 
+#'          In case of boostrapping the graph by using the `asg.new` function with the `prob=TRUE` 
+#'          option full, broken and dotted lines are drawn per default if the are found in more than 75, 50 or 25 percent of all resamplings. You can change this by using the `threshold` argument.
+#' 
+#' @param x asg graph object usually results of asg.new
+#' @param type character string specifying the plot type either 'network' or 'cor', default: 'network'.
+#' @param layout graph layout for plotting one of 'circle', 'sam', 'samd', 'grid', 'mds', 'mdsd', 'star', default: 'circle'.
+#' @param vertex.color default color for the vertices, either a single value, all vertices have hen this color or a vector of values, for different colors for the nodes, default: 'salmon'.
+#' @param cex size of the vertex labels which are plotted on the vertices, default: 1.
+#' @param vertex.size Number how large the vertices should be plotted, default: 5.
+#' @param edge.width Number on how strong the edges should be plotted, if edge.width=0, then the number is based on the correlation values, default: 2.
+#' @param edge.color Color to be plotted for edges. Usually vector of length two. First color for positive correlations, second color for negative corrleations. Default: c('grey','red').
+#' @param edge.text optional matrix to give edge labels, default: NULL
+#' @param edge.cex character expansion for edge labels, default: 0.8
+#' @param edge.pch plotting character which should be placed below the edge.text, default: 0
+#' @param noise Should be noise added to the layout. Sometimes useful if nodes are too close. Default: FALSE
+#' @param hilight.factors Should factors from a factor analysis be hilighted. Default: FALSE
+#' @param hilight.chain which chain should be highlighted, default: NULL (no chain highlight)
+#' @param chain.color which color for chain edges, default: black
+#' @param factors The number of factor to be fitted. If 0 is given the function will select the number of factors which explain more than 90\% of the variablity of the data set or the the maximum possible number of factors. Please note, that some of the matrices might be not suitable for factor analysis. Default: 0
+#' @param star.center the centered node if layout is start, must be a character string for the nodename, default: NULL
+#' @param plot.labels should node labels plotted, default: TRUE
+#' @param lty line type for standard edges in the graph, default: 1
+#' @param threshold cutoff values for bootstrap probabilities for drawing edges as dotted. broken lines and solid lines, default: c(0.25,0.5,0.75)
+#' @param interactive switch into interactive mode where you can click in the graph and move nodes with two clicks, first selecting the node, second click gives thehe new coordinates for the node, default: FALSE
+#' @param \dots curently not used 
+#' @return returns the layout of the plotted network or NULL if type is corplot (invisible) .
+#' @import graphics stats
+#' @examples 
+#' data(swiss)
+#' sw.g=asg.new(swiss,method='spearman')
+#' sw.g$theta
+#' round(sw.g$sigma,2)
+#' plot(sw.g,type='network',layout='circle')
+#' plot(sw.g,type='network',layout='sam')
+#' plot(sw.g,type='corplot')
+#' # vertex width based in correlations, colors based on factor groups
+#' plot(sw.g,hilight.factors=TRUE,layout='sam',vertex.size=15,edge.width=0)
+#' # adding correlation values
+#' plot(sw.g,edge.text=round(sw.g$sigma,2),edge.cex=1.2,edge.pch=15)
+#' sw.g=asg.new(swiss,method='spearman',prob=TRUE)
+#' sw.g$theta
+#' sw.g$probabilities
+#' plot(sw.g,type='network',layout='sam')
+#' sw.g$chains
+#' # plot chains for a node
+#' plot(sw.g,layout="sam",lty=2,hilight.chain="Infant.Mortality",
+#'  edge.width=3,edge.color=c("black","red"))
+#' @name plot.asg
+#' @export
+
+plot.asg = function (x,type='network',
+                     layout='circle',
+                     vertex.color='salmon',cex=1,
+                     vertex.size=5,edge.width=2,
+                     edge.color=c('grey70','red'),edge.text=NULL,edge.cex=0.8,edge.pch=0,
+                     noise=FALSE, 
+                     hilight.factors=FALSE,factors=0,
+                     hilight.chain=NULL,
+                     chain.color=c('black','red'),
+                     star.center=NULL,
+                     plot.labels=TRUE,
+                     lty=1,threshold=c(0.25,0.5,0.75),
+                     interactive=FALSE,...) {
+    g=x
+    if (any(class(g) %in% "matrix")) {
+        g=as.data.frame(g)
+    }
+    marrow <- function(x0, y0, x1, y1, cut.front, cut.back, col='black', ...){
+        x0.new <- (1 - cut.front) * x0 + cut.front * x1
+        y0.new <- (1 - cut.front) * y0 + cut.front * y1
+        x1.new <- (1 - cut.back) * x1 + cut.back * x0
+        y1.new <- (1 - cut.back) * y1 + cut.back * y0
+        arrows(x0.new, y0.new, x1.new, y1.new, col=col, ...)
+    }
+    getPCols = function (n) {
+        if(n > 20 |  n < 1) {
+            stop("only between 1 and 20 colors can be given" ) 
+        }
+        pcols= c("#FFC5D0","#FDC8C3","#F6CBB7","#EDD0AE","#E2D4A8","#D4D8A7","#C5DCAB","#B6DFB4","#A8E1BF",
+                 "#9EE2CB", "#99E2D8","#9BE0E5","#A4DDEF","#B3D9F7","#C4D5FB","#D5D0FC","#E4CBF9","#F0C7F2",
+                 "#F9C5E9", "#FEC4DD")
+                 idx=seq(1,20,by=floor(20/n))
+                 return(pcols[idx])
+    }
+
+    if (type %in% c('corrplot','cor','corplot')) {
+        asg.corrplot(g$sigma,text.lower=TRUE,cex=cex,...)
+        lay=NULL
+    } else {
+        if (any(class(layout) %in% "character")) {
+            if (class(g)[1]=="asg") {
+                xy=asg.layout(g,mode=layout,noise=noise,star.center=star.center,method=g$method)    
+            } else {
+                xy=asg.layout(g,mode=layout,noise=noise,star.center=star.center)    
+            }
+        } else if (any(class(layout) %in% 'matrix')) {
+            xy=layout
+            colnames(xy)=c("x","y")
+            if (is.null(rownames(xy)[1])) {
+                rownames(xy)=rownames(g)
+            }
+        }
+        arrow <- function (x,y,cut=0.6,lwd=2,lty=1,arrow.col="#666666",...) {
+            hx <- (1 - cut) * x[1] + cut * x[2]
+            hy <- (1 - cut) * y[1] + cut * y[2]
+            arrows(hx,hy,x[2],y[2],lwd=lwd,code=0,col=arrow.col,lty=lty,...)
+            for (a in c(20,15,10,5)) {
+                arrows(x[1],y[1],hx,hy,length=0.06*lwd,angle=a,lwd=lwd,col=arrow.col,lty=lty,...)
+            }
+        }
+
+        doPlot = function (theta,sigma,xy,node=NULL,probabilities=NULL,cmatrix=NULL,...) {
+            xrange=range(xy[,1])
+            yrange=range(xy[,2])
+            xlim=c(xrange[1]-1/10*diff(xrange),xrange[2]+1/10*diff(xrange))
+            ylim=c(yrange[1]-1/10*diff(yrange),yrange[2]+1/10*diff(yrange))
+            if (class(probabilities)[1] == "NULL") {
+                probabilities=theta
+            }
+            plot(xy,pch=19,col="salmon",cex=vertex.size,axes=FALSE,xlab="",ylab="",
+                 xlim=xlim,ylim=ylim,...)
+            directed=!identical(theta,t(theta))
+            for (i in 1:(nrow(theta))) {
+                for (j in 1:nrow(theta)) {
+                    if (i == j) { next }
+                    x1=xy[rownames(theta)[i],1]
+                    x2=xy[rownames(theta)[j],1]
+                    y1=xy[rownames(theta)[i],2]
+                    y2=xy[rownames(theta)[j],2]
+                    if (edge.width==0) {
+                        ew=as.numeric(cut(abs(sigma[i,j]),breaks=c(0,0.1,0.3,0.5,1)))
+                    } else {
+                        ew=edge.width
+                    }
+                    if (abs(probabilities[i,j])>threshold[3]) {
+                        lty=1
+                    } else if (abs(probabilities[i,j])>threshold[2]) {
+                        lty=2
+                    } else if (abs(probabilities[i,j])>threshold[1]) {
+                        lty=3
+                    } else {
+                        lty=0
+                    }
+                    if (sigma[i,j]>0) {
+                        col=chain.color[1]
+                        col.edge=edge.color[1]
+                    } else {
+                        col=chain.color[2]
+                        col.edge=edge.color[2]
+                    }
+                    if (theta[i,j] != 0 | theta [j,i] !=0 ) {
+                        if (!is.null(hilight.chain) && cmatrix[i,j] > 0) {
+                            lines(c(x1,x2),c(y1,y2),lwd=ew,col=col,lty=1)
+                        } else {
+                            if (directed) {
+                                arrow(c(x1,x2),c(y1,y2),lwd=ew,arrow.col=col.edge,lty=lty)
+                            } else {
+                                lines(c(x1,x2),c(y1,y2),lwd=ew,col=col.edge,lty=lty)
+                            }
+                        }
+                        if (is.matrix(edge.text) & lty > 0) {
+                            hx <- 0.5 * x1 + 0.5 * x2
+                            hy <- 0.5 * y1 + 0.5 * y2
+                            if (edge.pch>0) {
+                                points(hx,hy,pch=edge.pch,cex=5*edge.cex,col="#cccccc")
+                            }
+                            jitx=0;# jitter(diff(range(axTicks(1)))/30,amount=0.1)
+                            jity=0; jitter(diff(range(axTicks(2)))/30,amount=0.1)
+                            text(hx+jitx,hy+jity,edge.text[i,j],cex=edge.cex,col=col)
+                        }
+
+                    }
+                }
+            }
+            points(xy,pch=19,col="black",cex=vertex.size+0.3)
+            if (class(g)[1] == "asg" && hilight.factors) {
+                ids=asg.getFactors(g$data,factors=factors)$ids
+                maxid=max(ids)
+                cols=getPCols(maxid)[ids]
+                points(xy,pch=19,col=cols,cex=vertex.size)
+            } else {
+                points(xy,pch=19,col=vertex.color,cex=vertex.size)
+            }
+            if (plot.labels) {
+                text(xy,rownames(theta),cex=cex)
+            }
+            return(xy)
+        }
+        lay=xy
+        if (class(g)[1] =="asg") {
+            if (class(hilight.chain)[1] != "NULL") {
+                cmatrix=g$sigma
+                cmatrix[]=0
+                chns=grep(hilight.chain,names(g$chains))
+                for (nm in names(g$chain)[chns]) {
+                    for (i in 1:(length(g$chain[[nm]])-1)) {
+                        x=g$chain[[nm]][i]
+                        y=g$chain[[nm]][i+1]
+                        cmatrix[x,y]=1
+                        cmatrix[y,x]=1
+                    }
+                }
+                #print(cmatrix)
+            }
+            if (interactive) {
+                print("click two times, first on the point to move, second where to move\nEnd with one or two right clicks!")
+                while (TRUE) {
+                    loc=locator(2)
+                    if (class(loc) == "NULL" | class(loc$x[2]) == "NULL" | class(loc$x[1]) == "NULL") {
+                        break
+                    }
+                    dlay=rbind(lay,c(loc$x[1],loc$y[1]))
+                    d=as.matrix(dist(dlay))[nrow(dlay),1:(nrow(dlay)-1)]
+                    nm=names(which(d==min(d)))[1]
+                    lay[nm,1]=loc$x[2]
+                    lay[nm,2]=loc$y[2]
+                    lay=doPlot(g$theta,g$sigma,lay,probabilities=g$probabilities,cmatrix=cmatrix,...)
+                }
+            }
+            doPlot(g$theta,g$sigma,lay,probabilities=g$probabilities,cmatrix=cmatrix,...)
+        } else {
+            if (interactive) {
+                lay=doPlot(g,g,xy,probabilities=g,...)
+                print("click two times, first on the point to move, second where to move\nEnd with one or two right clicks!")
+                while (TRUE) {
+                    loc=locator(2)
+                    if (class(loc) == "NULL" | class(loc$x[2]) == "NULL" | class(loc$x[1]) == "NULL") {
+                        break
+                    }
+                    dlay=rbind(lay,c(loc$x[1],loc$y[1]))
+                    d=as.matrix(dist(dlay))[nrow(dlay),1:(nrow(dlay)-1)]
+                    nm=names(which(d==min(d)))[1]
+                    lay[nm,1]=loc$x[2]
+                    lay[nm,2]=loc$y[2]
+                    lay=doPlot(g,g,xy,probabilities=g,...)
+                }
+            }
+                    
+            # just an adjacency matrix
+            doPlot(g,g,lay,probabilities=g,...)
+        }
+    }
+    invisible(lay)
+}
+
+#' @title `as.list.asg` return a list representation for an asg graph object
+#' @description `as.list.asg` provides a S3 method to convert an asg graph object
+#'              into a list object which can be for instance used to write a report using the library openxlsx.
+#' @param x an asg graph object created with asg.new
+#' @param \ldots additional arguments, delegated to the list command
+#' @return list object with the components theta, sigma, p.value
+#' @examples 
+#' data(swiss)
+#' as=asg.new(swiss,method="spearman",alpha=0.1)
+#' result=as.list(as)
+#' ls(result)
+#' result$settings
+#' # can be writte as xlsx file for instance like:
+#' # library(openxlsx)
+#' # write.xlsx(result,file="some-result.xlsx")
+#' @seealso \link[asg:plot.asg]{plot.asg}
+#' @export
+
+
+as.list.asg = function (x,...) {
+    df=as.data.frame(unlist(lapply(x$chains,paste,collapse=", ")))
+    colnames(df)[1]="chain"
+    return(
+           list(data=x$data,theta=x$theta,
+                sigma=x$sigma,p.value=x$p.value,
+                chains=df,
+                settings=data.frame(info=c("method","alpha","threshold"),
+                                    values=c(x$method,x$alpha,x$threshold)),...)
+           )
+}
+       
+#' @title `asg.mplot` using the asg plot for simple adjacency matrices
+#' @description `asg.mplot` provides the plot.asg functions as well for simple adjacency matrices
+#' @section Details:
+#' This is a small plot utility to display networks or correlation matrices of asg graph objects.
+#' @param M an adjacency matrix, or an asg graph object
+#' @param main title of the plot, Default: empty string
+#' @param \dots all other parameters delegated to plot.asg
+#' @return nothing.
+#' @examples 
+#' M=matrix(rbinom(100,1, 0.2),nrow=10,ncol=10)
+#' diag(M)=0
+#' colnames(M)=rownames(M)=LETTERS[1:10]
+#' asg.mplot(M)
+#' @seealso \link[asg:plot.asg]{plot.asg}
+#' @export
+
+asg.mplot = function (M,main='',...) {
+    plot.asg(M,...)
+    if(main!= '') {
+        title(main)
+    }
+}
+#' @title improved score plot for pca objects
+#' 
+#' @description The function `asg.pcaplot` provides an improved xyplot for
+#'   visualizing the 2D scores of individual principal components of 
+#'   an object created using the function _prcomp_. 
+#' 
+#' @param pca  pca object of class _prcomp_, created using the function _prcomp_.
+#' @param pcs  the components to plot, default: c('PC1','PC2')
+#' @param pch  plotting character, default: 19
+#' @param cex  character expansion, default: 7
+#' @param col  plotting color, default: salmon
+#' @param text should text of samples be displayed, default: TRUE
+#' @param xlab custom xlab, if not given the PC name with variance in percent is shown, default: NULL
+#' @param ylab custom ylab, if not given the PC name with variance in percent is shown, default: NULL
+#' @param grid   should a plot grid be drawn, default: TRUE
+#' @param scale  function to scale to coordinate values sich as asinh, default: NULL
+#' @param \ldots additional arguments delegated to the standard plot function
+#' 
+#' @examples
+#' set.seed(125)
+#' library(MASS)
+#' data(birthwt)
+#' birthwt$low=NULL # remove column
+#' rnd=round(rnorm(nrow(birthwt),mean=10,sd=2),2)
+#' birthwt=cbind(birthwt,rnd=rnd) # adding a random var
+#' head(birthwt)
+#' pca=prcomp(t(scale(birthwt)))
+#' par(mfrow=c(1,2),mai=c(0.8,0.8,0.4,0.2))
+#' asg.pcaplot(pca,cex=7)
+#' asg.pcaplot(pca,col=rainbow(ncol(birthwt)),cex=1,text=FALSE)
+#' @seealso \link[asg:plot.asg]{plot.asg}
+#' @export
+
+asg.pcaplot = function (pca,pcs=c("PC1","PC2"),
+                        pch=19, cex=7,col="salmon",
+                        text=TRUE,xlab=NULL,ylab=NULL,
+                        grid=TRUE,scale=NULL,...) {
+    if (missing("xlab")) {
+        xlab=paste(pcs[1]," (", round(summary(pca)$importance[2,pcs[1]]*100,1),"%)",sep="")
+    }
+    if (missing("ylab")) {
+        ylab=paste(pcs[2]," (", round(summary(pca)$importance[2,pcs[2]]*100,1),"%)",sep="")
+    }   
+    if (class(scale)=="function") {
+        x=scale(pca$x[,pcs[1]])
+        y=scale(pca$x[,pcs[2]])
+        xlab=paste(substitute(scale),xlab)
+        ylab=paste(substitute(scale),ylab)        
+        #plot(x,y,pch=pch,col=col,type="n",xlab=xlab,ylab=ylab,...)
+    }
+    x=pca$x[,pcs[1]]
+    y=pca$x[,pcs[2]]
+    xdiff=(max(x)-min(x))*0.1
+    ydiff=(max(y)-min(y))*0.1
+    plot(x,y,type="n",xlab=xlab,ylab=ylab,
+        xlim=c(min(x)-xdiff,max(x)+xdiff),
+        ylim=c(min(y)-ydiff,max(x)+ydiff),...)
+    if (grid) {
+        grid (NULL,NULL, lty = 3, col = "grey30")
+    }
+    abline(h=0,lty=2)
+    abline(v=0,lty=2)    
+    if (text) {
+        points(x,y,pch=pch,col='black',cex=cex+0.6,...)    
+    }
+    points(x,y,pch=pch,col=col,xlab=xlab,ylab=ylab,cex=cex,...)
+    if (text) {
+        if (cex==1) {
+            text(pca$x,substr(rownames(pca$x),1,5),pos=1)
+        } else {
+            text(pca$x,substr(rownames(pca$x),1,5))
+        }
+    }
+}
+#' @title MDS plot for an asg object
+#' 
+#' @description The function `asg.mdsplot` provides an MDS plot for
+#'   a object created with the asg.new command. It uses the correlation distance as
+#'   d(a,b)=1-abs(r(a,b)), so the same data which are used to generate the associatian
+#'   chaing graph.
+#' 
+#' @param x  object of class asg, created using the function asg.new
+#' @param mds.method the method to compute the new coordinate system, default: cmdscale
+#' @param dist.method the method to compute the distance, default: 1-abs(sigma)
+#' @param grid  should a grid plotted, default: TRUE
+#' @param pch  plotting character, default: 19
+#' @param col  plotting color, default: salmon
+#' @param \ldots additional arguments delegated to the standard plot function
+#' 
+#' @examples
+#' library(MASS)
+#' data(birthwt)
+#' par(mfrow=c(1,2))
+#' as=asg.new(birthwt[,2:ncol(birthwt)],method="spearman")
+#' plot(as,layout="sam")
+#' asg.mdsplot(as)   # high negative correlations are close to each other per default
+#' asg.mdsplot(as,dist.method=function(x) { (1-x)/2 }) # negative correlations are far
+#' @seealso \link[asg:plot.asg]{plot.asg}
+#' @export
+
+asg.mdsplot = function (x,mds.method=cmdscale, dist.method = function(x) { 1-abs(x) }, grid=TRUE,pch=19,col="salmon",...) {
+    d.obj=as.dist(dist.method(x$sigma))
+    cmd=mds.method(d.obj)
+    limits = range(cmd)
+    diff=diff(limits)*0.05
+    xlim=c(limits[1]-diff,limits[2]+diff)
+    ylim=xlim
+    plot(cmd,type="n",xlim=xlim,ylim=ylim,xlab="Dim 1",ylab="Dim 2", ...)
+    if (grid) {
+        grid()
+    }
+    points(cmd,pch=pch,col=col,...)
+    text(cmd,labels=rownames(x$sigma),pos=1,...) 
+}
+#' @title linear model r-square for given data and graph
+#' 
+#' @description `asg.rsquare` calculates for given data and a graph the covered r-squared by 
+#' a linear model for each node. The linear model predicts each node by an additive mode 
+#' using it's neighbor nodes in the graph.
+#' 
+#' @param data asg graph object or data matrix or data frame where variables are in columns and samples in rows
+#' @param g graph object or adjacency matrix of an (un)directed graph, not needed if data is an asg graph, default: NULL.
+#' @return vector of rsquare values for each node of the graph.
+#' @examples 
+#' # random data
+#' A=matrix(rbinom(100,1, 0.2),nrow=10,ncol=10)
+#' diag(A)=0
+#' colnames(A)=rownames(A)=LETTERS[1:10]
+#' data=matrix(rnorm(1000),ncol=10)
+#' colnames(data)=colnames(A)
+#' asg.rsquare(data,A)
+#' # real data
+#' data(swiss)
+#' sw.s=asg.new(swiss,method='spearman')
+#' rsqs=asg.rsquare(sw.s)
+#' plot(sw.s,main=paste("r =",round(mean(rsqs,2))),
+#'    layout='star',star.center='Examination')
+#' # some colors for r-square values
+#' vcols=paste("grey",seq(80,40,by=-10),sep="")
+#' scols=as.character(cut(asg.rsquare(swiss,sw.s$theta),
+#'    breaks=c(0,0.1,0.3,0.5,0.7,1),labels=vcols))
+#' plot(sw.s,main=paste("r =",round(mean(asg.rsquare(swiss,sw.s$theta)),2)),
+#'    vertex.color=scols ,layout='star',star.center='Examination',
+#'    vertex.size=10,edge.color=c('black','red'),edge.width=3)
+#' @export
+
+asg.rsquare = function (data,g=NULL) {
+    if (any(class(data) %in% "matrix")) {
+        data=as.data.frame(data)
+    }
+    if (class(data)[1]=="asg") {
+        g=data$theta
+        data=data$data
+    }
+    if (class(g)[1]=="asg") {
+        A=g$theta
+    } else {
+        A=g
+    }
+    if (class(g)[1] == "NULL") {
+        stop("Error: An adjacency matrix g was not given to asg.rsquare!")
+    }
+    res=c()
+    colnames(A)=rownames(A)=gsub("^([0-9])","XYZ\\1",colnames(A))
+    colnames(data)=gsub("^([0-9])","XYZ\\1",colnames(data))
+    rn=rownames(A)
+    for (i in 1:nrow(A)) {
+        nms=names(which(A[i,]==1))
+        if (length(nms) == 0) {
+            res=c(res,0)
+            next
+        }
+         frmla = reformulate(termlabels = nms,  response = rn[i])
+         modelLm = lm(frmla, data = data)
+         rsquared = summary(modelLm)$r.squared
+         res=c(res,rsquared)
+     }
+     names(res)=rn
+     names(res)=gsub("^XYZ([0-9])","\\1",names(res))
+     return(res)
+}
+asg.corrplot = function (mt,text.lower=FALSE,text.upper=FALSE,pch.minus=19,pch.plus=19,xtext=NULL,cex=1.0,...) {
+    plot(1,type="n",xlab="",ylab="",axes=FALSE,
+         xlim=c(-0.5,ncol(mt)+0.5),ylim=c(nrow(mt)+0.5,0),...)
+    cscale=cex
+    cex=0.9*(10/nrow(mt))
+    if (cex>0.9) {
+        cex=1
+    }
+    cex=cscale*cex
+    # change
+    text(1:ncol(mt),0.25,colnames(mt),cex=cex)
+    if (length(xtext)>0) {
+        text(1:ncol(mt),nrow(mt)+0.75,xtext,cex=cex)
+    }
+    # change
+    text(0,1:nrow(mt),rownames(mt),cex=cex)
+    cols=paste("#DD3333",rev(c(15,30, 45, 60, 75, 90, "AA","BB","CC","DD")),sep="")
+    cols=c(cols,paste("#3333DD",c(15,30, 45, 60, 75, 90, "AA","BB","CC","DD"),sep=""))
+    breaks=seq(-1,1,by=0.1)                  
+    sym=identical(rownames(mt),colnames(mt))
+    cex=5*(10/nrow(mt))
+    if (cex>5) {
+        cex=5
+    }
+    cex=cscale*cex
+    for (i in 1:nrow(mt)) {
+        for (j in 1:nrow(mt)) {
+            if (sym & i == j) {
+                next
+            }   
+            #cex=abs(mt[i,j])*2
+            coli=cut(mt[i,j],breaks=breaks,labels=1:20)
+            pch=19
+            if (is.na(mt[i,j])) {
+                pch=NA
+            } else if (mt[i,j]< 0) {
+                pch=pch.minus
+            } else {
+                pch=pch.plus
+            }
+            if (i == j & !sym & text.lower) {
+                text(i,j,sprintf("%.2f",mt[i,j]),cex=(cex/5.5))
+            } else if (i < j & text.lower) {
+                text(i,j,round(mt[i,j],2),cex=(cex/5.5))
+            } else if (i > j & text.upper) {
+                text(i,j,round(mt[i,j],2),cex=(cex/5.5))
+            } else {
+                if (pch==17) {
+                    points(i,j,pch=pch,cex=cex*0.7*cscale,col=cols[coli])
+                } else {
+                    points(i,j,pch=pch,cex=cex*0.8*cscale,col=cols[coli])
+                }
+            }
+
+        }
+    }
+}
+#' @title pca plots for data
+#' 
+#' @description The function `asg.pcalot provides an biplot for
+#'   visualizing the pairwise scores of individual principal components of 
+#'   using the function _prcomp_. In contrast to the default 
+#'   biplot function  this plot visualizes the data as points and not row numbers,
+#'   it allows to display groups using color codes and distribution ellipses.
+#' 
+#' @param x some data, rows with NA's are removed, data are scaled
+#' @param pcs the components to plot, default: c('PC1','PC2')
+#' @param pch plotting character, default: 19
+#' @param col plotting color, default: black
+#' @param arrows should loading arrows be displayed, default: TRUE
+#' @param arrow.fac scaling factor for arrow length, default: 1
+#' @param ellipse should 85 and 95 confidence intervals for the chisq distribution be shown. If this is shown colors for each group using the col argument must be given, default: FALSE
+#' @param ell.fill should a filled 85 percent confidence interval be shown, colors will be used from the plotting color with opacity, default: FALSE
+#' @param xlab custom xlab, if not given the PC name with variance in percent is shown, default: NULL
+#' @param ylab custom ylab, if not given the PC name with variance in percent is shown, default: NULL
+#' @param \ldots arguments delegated to the standard plot function
+#' @import grDevices
+#' @import cluster
+#' 
+#' @examples
+#' par(mai=c(0.8,0.8,0.2,0.6),mfrow=c(1,2))
+#' data(iris)
+#' asg.pcabiplot(iris[,1:4])
+#' asg.pcabiplot(iris[,1:4],col=rep(2:4,each=50),ellipse=TRUE,ell.fill=TRUE,
+#'    arrow.fac=2.3,arrows=TRUE,main="biplot")
+#' legend('topright',pch=19,col=2:4,levels(iris$Species))
+#' # standard score plot
+#' asg.pcabiplot(iris[,1:4],col=rep(2:4,each=50),ellipse=FALSE,
+#'      arrow.fac=2.3,arrows=FALSE,main="scoreplot")
+#' @export
+#' 
+
+asg.pcabiplot = function (x,pcs=c("PC1","PC2"),
+                       pch=19,col='black',
+                       arrows=TRUE,arrow.fac=1,
+                       ellipse=FALSE,ell.fill=FALSE,xlab=NULL,ylab=NULL,...) {
+    idx=which(apply(x,1,function (x) { all(!is.na(x)) }))
+    pca=prcomp(scale(x[idx,]))
+
+    if (missing("xlab")) {
+        xlab=paste(pcs[1]," (", round(summary(pca)$importance[2,pcs[1]]*100,1),"%)",sep="")
+    } 
+    if (missing("ylab")) {
+        ylab=paste(pcs[2]," (", round(summary(pca)$importance[2,pcs[2]]*100,1),"%)",sep="")
+    } 
+    plot(pca$x[,pcs[1]],pca$x[,pcs[2]],pch=pch,col=col,type="n",xlab=xlab,ylab=ylab,...)
+    abline(h=0,lty=2)
+    abline(v=0,lty=2)    
+    if (ellipse) {
+        if (length(col)!= nrow(pca$x)) {
+            stop("colors must have sam elength as data points")
+        }
+        ell.col=col
+        i=1
+        for (cl in names(table(ell.col))) {
+            C=cov(pca$x[ell.col==cl,c(pcs[1],pcs[2])])    # Covarianz-Matrix C bestimmen
+            d85=qchisq(0.85, df = 2)     # 85% - Faktor , um die Ellipse zu skalieren
+            M=colMeans(pca$x[ell.col==cl,c(pcs[1],pcs[2])]) #   Mittelwerte (Zentrum) des Clusters
+            el=cluster::ellipsoidPoints(C, d85, loc=M)  # Ellipsen-Punkte aus C und M berechnen
+            if (ell.fill) {
+                colfill=paste(rgb(t(col2rgb(cl))/255),"33",sep="")
+                polygon(el,col=colfill,border=NA)
+                i=i+1
+                next
+            }
+            lines(el,col=cl,lwd=1.5,lty=2)    #  Ellipse als geschlossene Linies zeichnen
+            d95=qchisq(0.95, df = 2)     # 85% - Faktor , um die Ellipse zu skalieren
+            el=cluster::ellipsoidPoints(C, d95, loc=M)  # Ellipsen-Punkte aus C und M berechnen
+            lines(el,col=cl,lwd=1.5,lty=1)    #  Ellipse als geschlossene Linies zeichnen                        
+
+        }
+    }
+    points(pca$x[,pcs[1]],pca$x[,pcs[2]],pch=pch,col=col,...)
+    if (arrows) {
+        loadings=pca$rotation
+        arrows(0,0,loadings[,pcs[1]]*arrow.fac,loadings[,pcs[2]]*arrow.fac,
+               length=0.1,angle=20,col='black')
+        text(loadings[,pcs[1]]*arrow.fac*1.2,loadings[,pcs[2]]*arrow.fac*1.2,
+             rownames(loadings),col='black',font=2)
+    }
+
+}
+
+#' @title Determine graph layouts.
+#'
+#' @description This function returns xy coordinates for a given input adjacency matrix or asg graph. 
+#' This function is useful if you like to plot the same set of nodes with different edge connections 
+#' in the same layout.
+#' @param A An adjacency matrix or an asg graph object.
+#' @param mode Character string for the layout type, can be either 'mds' (mds on graph), 'mdsd' (mds on data) 'sam' (sammon on graph), 'samd' (sammon on data), 'circle', 'grid' or 'star', default: 'sam'
+#' @param method method for calculating correlation distance if mode is either 'mdsd' or 'samd', default: pearson
+#' @param noise Should some noise be added, default: FALSE.
+#' @param star.center the centered node if layout is 'star', must be a character string for the nodename, default: NULL.
+#' @param interactive  switch into interactive mode where you can click in the graph and move nodes with two clicks, first selecting the node, second click gives thehe new coordinates for the node, default: FALSE
+#' @keywords network layout
+#' @return A matrix with x and y columns for the layout.
+#' @examples
+#' data(swiss)
+#' sw.s=asg.new(swiss,method='spearman')
+#' sw.p=asg.new(swiss,method='pearson')
+#' lay=asg.layout(sw.s,mode='sam')
+#' plot(sw.s,layout=lay)
+#' plot(sw.p,layout=lay)
+#' plot(sw.s,layout='star',star.center='Education')
+#' rn1=rnorm(nrow(swiss))
+#' nswiss=cbind(swiss,Rn1=rn1)
+#' plot(asg.new(nswiss,method='spearman'),layout='sam')
+#' plot(asg.new(nswiss,method='spearman'),layout='samd',
+#'   vertex.size=2,vertex.color='beige')
+#' @name asg.layout
+#' @export
+
+asg.layout = function (A,mode='sam', method='pearson', noise=FALSE, star.center=NULL,interactive=FALSE) {
+    if (mode %in% c('samd','mdsd')) {
+        if(class(A)[1] == "asg") {
+            A=as.matrix(A$sigma)
+        }
+    }
+    if(class(A)[1] =="asg") {
+        S=A$sigma
+        A=as.matrix(A$theta)
+        idx=which(apply(A,1,sum)==0)
+        if (length(idx)>0) {
+            diag(S)=0
+            for (i in idx) {
+                j=which(abs(S[i,])==max(abs(S[i,])))
+                A[i,j]=1
+                A[j,i]=1
+            }
+        }
+    }
+    if (mode %in% c('mds','sam')) {
+        A=connectComponents(A)
+        sp=asg.shortest.paths(A)
+        xy=cmdscale(sp)
+        rownames(xy)=rownames(A)
+        if (mode=='mds') {
+            dxy=base::as.matrix(dist(xy))
+            diag(dxy)=1
+            idx=which(dxy<0.05,arr.ind=TRUE)
+            if (nrow(idx)>1) {
+                for (i in 1:nrow(idx)) {
+                    # add noise to nodes on the same point
+                    #print(i)
+                    n=idx[i,1]
+                    xy[n,1]=xy[n,1]+rnorm(1,mean=0,sd=0.1)
+                    xy[n,2]=xy[n,2]+rnorm(1,mean=0,sd=0.1)
+                }
+            }
+            return(xy)
+        } else {
+            xy=xy+jitter(xy)
+            #xy=mcg.sam(sp)
+            xy=MASS::sammon(sp,y=xy,trace=FALSE)$points
+            # add some jitter
+            #sp[]=sp+rnorm(nrow(projection)*2,sd=sd(projection)*0.1)
+            #projection[]=
+            #xy = MASS::sammon(sp)$points        
+        }
+    } else if (mode == "samd") {
+        xy=MASS::sammon(as.dist(1-cor(A,method=method,use='pairwise.complete.obs')^2))$points
+    } else if (mode == "mdsd") {
+        xy=cmdscale(as.dist(1-cor(A,method=method,use='pairwise.complete.obs')^2))
+        rownames(xy)=colnames(A)
+    } else if (mode == 'circle') {
+        x=0
+        y=0
+        a=0.5
+        b=0.5
+        rad2deg <- function(rad) {(rad * 180) / (pi)}
+        deg2rad <- function(deg) {(deg * pi) / (180)}
+        nodes=rownames(A)
+        xy=matrix(0,ncol=2,nrow=length(nodes))
+        rownames(xy)=nodes
+        for (i in 1:length(nodes)) {
+            t=deg2rad((360/length(nodes))*(i-1))
+            xp = a*cos(t)*0.75 + x;
+            yp = b*sin(t)*0.75 + y;
+            xy[nodes[i],]=c(xp,yp)
+        }
+    } else if (mode == 'star') {
+        oorder=rownames(A)
+        if (class(star.center)[1] != "NULL") {
+            norder=c(which(rownames(A)==star.center),which(rownames(A)!=star.center))
+            A=A[norder,norder]
+        }
+        x=0
+        y=0
+        a=0.5
+        b=0.5
+        rad2deg <- function(rad) {(rad * 180) / (pi)}
+        deg2rad <- function(deg) {(deg * pi) / (180)}
+        nodes=rownames(A)
+        xy=matrix(0,ncol=2,nrow=length(nodes))
+        rownames(xy)=nodes
+        xy[1,]=c(0.0,0.0)
+        for (i in 2:length(nodes)) {
+            t=deg2rad((360/(length(nodes)-1))*(i-2))
+            xp = a*cos(t)*0.75 + x;
+            yp = b*sin(t)*0.75 + y;
+            xy[nodes[i],]=c(xp,yp)
+        }
+        xy=xy[oorder,]
+    } else if (mode == 'grid') {
+        n=nrow(A)
+        xy=matrix(0,ncol=2,nrow=nrow(A))
+        rownames(xy)=rownames(A)
+        mody=ceiling(sqrt(n))
+        x=0
+        y=0
+        for (r in rownames(A)) {
+            if (x %% mody == 0) {
+                y=y+1
+                x=0
+            }
+            x=x+1
+            xy[r,]=c(x,y)
+        }
+    } else {
+        stop("unknown layout. Use mds, circle, or grid as layout")
+    }
+    xy=scale(xy)
+    if (noise) {
+        xy=xy+rnorm(length(xy),mean=0,sd=0.1)
+    }
+    colnames(xy)=c("x","y")
+    if (interactive) {
+        plot.asg(A,layout=xy)
+        print("click two times, first on the point to move, second where to move\nEnd with one or two right clicks!")
+        lay=xy
+        while (TRUE) {
+            loc=locator(2)
+            if (class(loc) == "NULL" | class(loc$x[2]) == "NULL" | class(loc$x[1]) == "NULL") {
+                break
+            }
+            dlay=rbind(lay,c(loc$x[1],loc$y[1]))
+            d=as.matrix(dist(dlay))[nrow(dlay),1:(nrow(dlay)-1)]
+            nm=names(which(d==min(d)))[1]
+            lay[nm,1]=loc$x[2]
+            lay[nm,2]=loc$y[2]
+            lay=plot.asg(A,layout=lay)
+        }
+        xy=lay
+        return(xy)
+    } else {
+        return(xy)
+    }
+}
+components = function (A) {
+    A=as.matrix(A)
+    A=A+t(A)
+    A[A>0]=1
+    comp=c()
+    P=asg.shortest.paths(A)
+    nodes=rownames(A)
+    x=1
+    while (length(nodes) > 0) {
+        n=nodes[1]
+        idx=which(P[n,] < Inf)
+        ncomp=rep(x,length(idx))
+        names(ncomp)=rownames(P)[idx]
+        comp=c(comp,ncomp)
+        nodes=setdiff(nodes,rownames(P)[idx])
+        x=x+1
+    }
+    return(comp[rownames(A)])
+}
+
+connectComponents = function (A) {
+    A=as.matrix(A)
+    A=A+t(A)
+    A[A>0]=1
+    P=asg.shortest.paths(A)
+    if (!any(P==Inf)) {
+        return(A)
+    }
+    comp=components(A)
+    nodes=c()
+    tab=table(comp)
+    for (n in names(tab)) {
+        c=names(which(comp==n))
+        if (tab[[n]] > 2) {
+            Am=A[c,c]
+            # todo min
+            deg=apply(Am,1,sum)
+            idx=which(deg>0)
+            minval=min(deg[idx])
+            idx=which(deg == minval)[1]
+            node=c[idx]
+        } else {
+            node = c[1]
+        }
+        nodes=c(nodes,node)
+    }
+    A[nodes,nodes]=1
+    diag(A)=0
+    return(A)
+}
+
+#' @title Get shortest paths between nodes from adjacency matrices or mcgraph objects
+#' @description Returns the shortes paths between each pair of nodes or Inf if they belong
+#'     to different graph components which are not connected. Attention this only works for undirected graphs and directed graphs are converted internally to undirected graphs. For a full and faster implemention use more sophisticated R packages, like igraph. The method is mainly used for  the layout mechanism.
+#' @param A mcgraph object or adjacency matrix
+#' @param mode should graph be taken as directed graphs, or undirected, if mode='undirected' is given, the graph is transformed into an undirected graph, if mode is 'directed' no graph transformation is done, default: 'directed'
+#' @return matrix of same dimension as input matrix with vector with component ids and node names labeling the ids.
+#' @examples
+#' data(swiss)
+#' sw.s=asg.new(swiss,method='spearman')
+#' plot(sw.s,layout='sam')
+#' asg.shortest.paths(sw.s)
+#' @name asg.shortest.paths
+#' @author Detlef Groth <email: dgroth@uni-potsdam.de>
+#' @export 
+
+
+asg.shortest.paths = function (A,mode="directed") {
+    if (class(A)[1] == "asg") {
+        A=A$theta
+    }
+    if (mode == "undirected") {
+        A=A+t(A)
+        A[A!=0]=1
+    }
+    S=A
+    S[]=Inf
+    diag(S)=0
+    x=1
+    S[A > 0 & A < Inf]=1
+    while (TRUE) { 
+        flag = FALSE 
+        for (m in 1:nrow(S)) {
+            ns=which(S[m,] == x)
+            for (n in ns) {
+                for (o in which(A[n,]==1)) {
+                    if (o != m) {
+                        flag = TRUE
+                        if (S[m,o] > x + 1) {
+                            S[m,o]=x+1
+                            if (mode == "undirected") {
+                                S[o,m]=x+1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!flag) {
+            break
+        }
+        x=x+1
+    }
+    return(S)
+}
+
+
+# mutual information
+asg.mutualInfo = function (x,y=NULL,nbin=10) {
+   if (length(which(class(x) %in% c('table','matrix','data.frame'))) == 0) {
+      x=table(cut(x,breaks=nbin),cut(y,breaks=nbin))        
+  } else if (length(which(class(x) %in% c('matrix','data.frame'))) == 1) {
+      m=matrix(0,nrow=ncol(x),ncol=ncol(x))
+      colnames(m)=rownames(m)=colnames(x)
+      for (i in 1:(ncol(x)-1)) {
+          for (j in (i+1):ncol(x)) {
+              m[i,j]=m[j,i]=asg.mutualInfo(x=x[,i],y=x[,j],nbin=nbin)
+          }
+      }
+      return(m)
+  }
+  f1=x/sum(x)
+  fx=rowSums(f1)
+  fy=colSums(f1)
+  fn=fx %o% fy
+  f2=fn/sum(fn)
+  LR = ifelse(f1>0,log(f1/f2),0)
+  MI = sum(f1*LR)
+  return(MI)
+}
+#' @title Calculate variable importance for decision tree regression
+#'
+#' @description This function returns the variable importance for a regression tree predicting each 
+#' variable individually. Can be used to compare correlations with predictions from a regression tree. 
+#' Good predictors with high importance values should be joined by edges within the asg graph.
+#' 
+#' @param x a matrix or a dataframe with variables in columns
+#' @param correct should be bacgkround substraction of a random variable be perfomed, default: TRUE
+#' @return matrix with all pairwise variable importances. The response variables are the row names, the predictor variables are in the column names.
+#' @examples
+#' data(swiss)
+#' asg.rpart(swiss)
+#' @importFrom rpart rpart
+#' @export
+
+
+asg.rpart = function (x,correct=TRUE) {
+    if (length(which(class(x) %in% c('matrix','data.frame'))) == 1) {
+        # add three dummy vars to calculate background
+        if (correct) {
+            x=cbind(x,DX1=rnorm(nrow(x),mean=10,sd=1),DX2=rnorm(nrow(x),mean=50,sd=3),DX3=rnorm(nrow(x),mean=100,sd=4))
+        }
+        
+      m=matrix(0,nrow=ncol(x),ncol=ncol(x))
+      colnames(m)=rownames(m)=colnames(x)
+      cnames=colnames(m)
+      for (i in 1:ncol(x)) {
+          var=x[,i]
+          mod=rpart(var~.,x[,-i])
+          imp=mod$variable.importance/sum(mod$variable.importance)
+          imp=imp[cnames[-i]]
+          m[i,-i]=imp
+      }
+      # substract background from dummy vars
+      if (correct) {
+          #recover()
+          m[is.na(m)]=0
+          bg=median(apply(m[,ncol(m)-2:ncol(m)],2,median))
+          m=m-bg
+          m=m[1:(nrow(m)-3),1:(ncol(m)-3)]
+          if(min(m)<0) {
+              m=m+abs(min(m))
+          }
+      } 
+      return(m)
+  } else {
+      stop("dstats$cart requires matrix or data frame as input")
+  }
+}
+
+#' @title Start a graphical user interface for the SNH algorithm
+#'
+#' @description This function is a simple wrapper function to download the actual version of the GUI
+#'    for performing an analysis with the St- Nicolas House Algorithm. After execution a GUI window should popup. Please read the help pages
+#'    in the Help tab to find out how to use this application.
+#' @param wd a matrix or a dataframe with variables in columns, default: exec directory of the package
+#' @examples
+#' \dontrun{
+#'   asg.gui()
+#' }
+#' @export
+#' 
+
+
+asg.gui <- function (wd=file.path(system.file(package='asg'),"exec")) {
+    pwd=getwd()
+    setwd(pwd)
+    if (file.exists(file.path(R.home(),"bin","Rscript"))) {
+        rscript=file.path(R.home(),"bin","Rscript")
+    } else if (file.exists(file.path(R.home(),"bin","Rscript"))) {
+        rscript=file.path(R.home(),"bin","Rscript.exe")
+    } else {
+        stop("Error: Rscript binary not found!")
+    }
+    if (!file.exists("snha-gui.Rz")) {
+        # TODO download URL
+        utils::download.file("https://raw.githubusercontent.com/mittelmark/snha-gui/main/bin/snha-gui.Rz","snha-gui.Rz")
+    }
+    system2(rscript,"snha-gui.Rz",wait=FALSE)
+    setwd(pwd)
+    print("St. Nicolas House GUI started in new application window!")
+}
+
+# ToDo
+# linewid 1,2,3,4 for steps <0.1, 0.1..0.3,0.3..0.5,>0.5
+# hilight factors
+
+asg.pcor.test = function (x,y,z,method='pearson') {
+   if (any(class(z) %in% 'data.frame')) {
+       z=as.matrix(z)
+   }
+   if (any(class(z) %in% 'matrix')) {
+       df=data.frame(x=x,y=y) 
+       for (col in 1:ncol(z)) {
+           df=cbind(df,z=z[,col])
+           colnames(df)[ncol(df)]=colnames(z)[col]
+       }
+   } else {
+       df=data.frame(x=x,y=y,z=z)
+   }
+   frmx=formula(paste("x~",paste(colnames(df)[3:ncol(df)],collapse="+"),sep=""))
+   frmy=formula(paste("y~",paste(colnames(df)[3:ncol(df)],collapse="+"),sep=""))
+   df=na.omit(df)
+   if (method=='spearman') {
+       df=as.data.frame(apply(df,2,rank))
+   }
+   #xres=residuals(lm(df[,1]~df[,3]))
+   #yres=residuals(lm(df[,2]~df[,3]))
+   xres=residuals(lm(frmx,data=df))
+   yres=residuals(lm(frmy,data=df))
+
+   pr=cor(xres,yres)
+   gn=ncol(df)-2 # number of z
+   n=nrow(df)
+   statistic <- pr*sqrt((n-2-gn)/(1-pr^2))
+   p.value <- 2*pnorm(-abs(statistic))
+   return(data.frame(estimate=pr,p.value=p.value,statistic=statistic,n=n,gn=gn))
+}
+
+
+#' @title log-likelihood for the given asg graph and the given chain
+#' @description This function returns the log-likelihood for the given asg graph and the given chain.
+#' @param g an asg graph object
+#' @param chain a chain object of an asg graph, if not given a data frame with the values is returned for all chains, default: NULL
+#' @return list with the following components: ll.total, ll.chain, ll.rest, ll.block
+#'       df, chisq, p.value,  block.df, block.ch, block.p.value. If chain is not given an overal summary is made for all chains an returned as data frame.
+#' @examples
+#' data(swiss)
+#' sw.g=asg.new(swiss)
+#' asg.ll(sw.g,sw.g$chain$Catholic)
+#' head(asg.ll(sw.g))
+#' @export
+#' @include ll.R 
+
+asg.ll = function (g,chain=NULL) {
+    if (is.null(chain)) {
+        return(ll.makeDF(g$data, g$chains))
+    } else {
+        return(ll.getChainLL(g$data,chain))
+    }
+}
+

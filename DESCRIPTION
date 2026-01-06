@@ -1,0 +1,35 @@
+Package: asg
+Title: Package for generating correlation networks based on association chains
+Version: 0.10.0
+Authors@R: 
+    c(person(given = "Detlef",
+           family = "Groth",
+           role = c("aut", "cre"),
+           comment=c(ORCID = "0000-0002-9441-3978"),           
+           email = "dgroth@uni-potsdam.de"),
+    person(given = "Masiar",
+           family = "Novine",
+           role = c("aut"),
+           comment = c(ORCID = "0000-0001-9687-8675"),
+           email = "novinefarahb@uni-potsdam.de"),
+    person(given = "Cedric",
+           family = "Moris",
+           role = c("aut"),
+           email = "cedric.moris@uni-potsdam.de"))
+Description: What the package does (one paragraph).
+Maintainer: Detlef Groth <dgroth@uni-potsdam.de>
+License: MIT + file LICENSE
+Imports: graphics, stats, MASS, rpart, cluster
+Depends: R (>= 3.5.0)
+Suggests: knitr, rmarkdown, pcaPP
+VignetteBuilder: knitr
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Collate: 
+    'll.R'
+    'asg.R'
+    'data.R'
+    'impute.R'
+    'mgraph.R'
+    'pkgname.R'
