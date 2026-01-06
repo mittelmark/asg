@@ -1,0 +1,11 @@
+snha - St. Nicolas Application
+===============================
+
+This is the install for the St. Nicolas Algorithm graphical user interface.
+
+Author: Detlef Groth, University of Potsdam, Germany
+
+This  will  install  Snha - the  St.  Nicolas  Application.  
+
+Do you  wish  to continue?
+
