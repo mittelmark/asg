@@ -118,7 +118,7 @@ asg.new <- function (data,alpha=0.05,method='pearson',threshold=0.01,pcor=FALSE,
     t1=Sys.time()
     if (!prob) {
         ## eliminate constant columns
-        idx=which(apply(data,2,var)!= 0) 
+        idx=which(apply(data,2,var,na.rm=TRUE)!= 0) 
         data=data[,idx]
     }
     if (prob) {
