@@ -7,8 +7,9 @@ the SNHA package.
 
 ## Links
 
-- [snha package](https://github.com/mittelmark/shna)
-- [snha GUI for Windows, MacOS and Linux](https://github.com/mittelmark/shna)
+- [snha package](https://github.com/mittelmark/snha) - for any OS running R
+- [snha  GUI](https://github.com/mittelmark/shna)  - for Windows, MacOS, Linux
+and FreeBSD
 
 
 
