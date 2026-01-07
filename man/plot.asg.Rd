@@ -26,6 +26,7 @@
   lty = 1,
   threshold = c(0.25, 0.5, 0.75),
   interactive = FALSE,
+  legend = NULL,
   ...
 )
 }
@@ -71,6 +72,8 @@
 \item{threshold}{cutoff values for bootstrap probabilities for drawing edges as dotted. broken lines and solid lines, default: c(0.25,0.5,0.75)}
 
 \item{interactive}{switch into interactive mode where you can click in the graph and move nodes with two clicks, first selecting the node, second click gives thehe new coordinates for the node, default: FALSE}
+
+\item{legend}{a list object with colors and labels which will be plotted below of the plot}
 
 \item{\dots}{curently not used}
 }

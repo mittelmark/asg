@@ -22,20 +22,16 @@ PKG     := $(shell basename `pwd`)
 tasks:  ## list all tasks
 	@grep -Eo '^[a-z0-9]+:.+' $(CURRENT_MAKEFILE) | sed -E 's/:\s+##/\t- /g'
 
-build:
+build:  ## create documentation and build tar.gz
 	echo 'library(roxygen2); setwd("."); roxygenize();' | R --slave
 	R CMD build .
 	#echo 'library(devtools); build(".",path="repo/src/contrib");' | R --slave	
 	#echo '.libPaths(c("~/workspace/delfgroth/myr/rlibs/",.libPaths())); library(devtools); build("$(pkg)",path="repo/src/contrib");' | R --slave	
 	#echo 'library(tools); setwd("repo/src/contrib") ; library(tools); write_PACKAGES();' | R --slave	
 	
-check:  
-	R CMD build .
+check:  build ## build and check tar.gz
 	R CMD check $(PKG)_$(VERSION).tar.gz
 	#echo 'library(evaluate);library(devtools); check("$(pkg)");' | R --slave	
-
-help:
-	 echo "library(mcgraph);help(mcg.cross)" | R --slave	
 
 doc:
 	R CMD Rdconv -t txt $(PKG)/man/$(func).Rd | less

@@ -1,55 +1,14 @@
 ChangeLog
 ==========
 
-## Version 0.6 
+## Version 0.10.0 - January 2022
 
-
-- 2019-12-13 started
-- adding probabilities using bootstrapping
-- percentage fixes in documentation
-- plotting broken lines for prob < 0.5
-
-## Version 0.7.2
-
-- asg.ll added for calcuation of log-likelihood
-- na.omit for factor analysis
-- remove of reverse same chains
-- removal of short in long chains (asg.new with chains.clean option) 
-
-## Version 0.7.3
-- interactive mode for plotting
-- improved layout for sam and mds by introducing invisible edges between components
-- adding vignette
-
-## Version 0.7.4
-- adding asg.pcaplot
-
-## Version 0.8.0
-- release to github
-
-## Version 0.8.1
-- adding plot option edge.text
-
-## Version 0.8.2
-- adding asg.impute
-- adding as.list S3 method for writing report with openxlsx
-
-## Version 0.8.3
-- adding asg.mdsplot
-- adding asg.pcadata
-- adding asg.impute
-- adding asg.nd - network deconvolution
-
-## Version 0.9.0
-- adding mgraph.new
-- adding mgraph.components
-- adding mgraph.degree  
-- adding mgraph.d2u
-- adding mgraph.nodeColors
-- adding mgraph.u2d
-- adding plot.mgraph
+- own Github URL
+- adding harmonic centrality measure with demo for using in plotting
+- extending tutorial
 
 ## Version 0.9.1
+
 - adding asg.gui
 - adding interactive option for asg.layout
 - adding vignette example for decathlon 1988
@@ -59,3 +18,58 @@ ChangeLog
 - adding pm method to mgraph.graph2data using adjacency as input for precicion matrix
 - changed alpha in asg.new to default 0.05 instead of older 0.01!
 - fix layout function if given matrix in mgraph fixed
+
+## Version 0.9.0
+
+- adding mgraph.new
+- adding mgraph.components
+- adding mgraph.degree  
+- adding mgraph.d2u
+- adding mgraph.nodeColors
+- adding mgraph.u2d
+- adding plot.mgraph
+
+## Version 0.8.3
+
+- adding asg.mdsplot
+- adding asg.pcadata
+- adding asg.impute
+- adding asg.nd - network deconvolution
+
+## Version 0.8.2
+
+- adding asg.impute
+- adding as.list S3 method for writing report with openxlsx
+
+## Version 0.8.1
+
+- adding plot option edge.text
+
+## Version 0.8.0
+
+- release to github
+
+## Version 0.7.4
+
+- adding asg.pcaplot
+
+## Version 0.7.3
+
+- interactive mode for plotting
+- improved layout for sam and mds by introducing invisible edges between components
+- adding vignette
+
+## Version 0.7.2
+
+- asg.ll added for calcuation of log-likelihood
+- na.omit for factor analysis
+- remove of reverse same chains
+- removal of short in long chains (asg.new with chains.clean option) 
+
+
+## Version 0.6 
+
+- 2019-12-13 started
+- adding probabilities using bootstrapping
+- percentage fixes in documentation
+- plotting broken lines for prob < 0.5

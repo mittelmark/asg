@@ -298,7 +298,7 @@ mgraph.degree <- function (g,mode="undirected") {
     } else if (mode == "in") {
         g=t(g)
     } 
-    if (class(g) == "asg") {
+    if (class(g)[1] == "asg") {
         g=g$theta
     } 
     g[abs(g)!=0]=1
@@ -330,7 +330,7 @@ mgraph.degree <- function (g,mode="undirected") {
 mgraph.d2u <- function (g) {
     h=g
     asg=FALSE
-    if (class(g) == "asg") {
+    if (class(g)[1] == "asg") {
         g=g$theta
         asg=TRUE
     }

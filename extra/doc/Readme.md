@@ -154,9 +154,10 @@ blog post by symbio5.nl:
 
 https://symbio6.nl/en/blog/analysis/harmonic-centrality
 
-**Hint:**  You can export all the plots by  clicking on the save button on the
-           left in the upper button bar. All plots will be then saved in a PDF
-           file. 
+**Hint:**  
+You can export all the plots by  clicking on the save button on the
+left in the upper button bar. All plots will be then saved in a PDF
+file. 
 
 ![](snappshot-02s.png)
 
@@ -315,12 +316,25 @@ your system. If you use the application please cite the URL at github and the fo
   * single check for isolated nodes is now available
   * more plotting methods for PCA (of variables and samples) and for clustering
 
-** Version 0.7.0 - Aschauhof Autumn:**
+**Version 0.7.0 - Aschauhof Autumn 2022:**
 
   * adding data filtering
   * two MDS distances can be used
   * correlation values can be shown on the graph
     
+**Version 0.7.1 - October 2022**
+
+  * adding csv loading support
+  * adding PCA imputation
+
+**Version 0.8.0 - Januar 2026**
+  
+  * adding support for harmonic centrality in node coloring
+  * fixing Excel report saving
+  * redesign of project and new Github project at
+    https://github.com/mittelmark/asg for GUI and package
+    
+
 -----
 
 ## <a name="packages">Packages</a>
