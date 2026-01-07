@@ -4,3 +4,4 @@ Makefile
 snha-gui.vfs/*
 snha-win/*
 .*.xlsx.*
+.*png
