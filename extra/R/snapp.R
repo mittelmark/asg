@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-modified ="File stamp: <20260107.1543>"
+modified ="File stamp: <20260107.2313>"
 
 # TODO:
 #   - side by side layout select columns and plot
@@ -183,8 +183,9 @@ Rsnapp$gui = function (this) {
     tkset(tkmeth,"pearson")
     tkbind(tkmeth,"<<ComboboxSelected>>",this$asgChange)
     tklay=ttkcombobox(tf4,values=c("sam","samd","mds","mdsd","circle"),width=6)
+    this$cblay=tklay
     tkset(tklay,"sam")
-    tkbind(tklay,"<<ComboboxSelected>>",function () { this$lay=NULL; this$asgChange() })
+    tkbind(tklay,"<<ComboboxSelected>>",function () { this$lay = tclvalue(tkget(this$cblay)); this$asgChange() })
     tkvsize=ttkcombobox(tf4,values=3:10,width=6)
     tkbind(tkvsize,"<<ComboboxSelected>>",this$asgChange)
     tkset(tkvsize,7)
@@ -199,7 +200,7 @@ Rsnapp$gui = function (this) {
     tkbbt=ttkcheckbutton(tf4,variable=this$bootstrap,command=this$asgChange)
     tkmethod=ttkcombobox(tf4,textvariable=this$method,values=c("SNHA","Cor","MDScor1","MDScor2","PCAsam","PCAvar","Cluster"),width=8)
     #tkset(tkmethod)="SNHA"
-    tkbind(tkmethod,"<<ComboboxSelected>>",this$asgChange)        
+    tkbind(tkmethod,"<<ComboboxSelected>>",this$asgChange)
     tkcolor=ttkcombobox(tf4,textvariable=this$colorset,values=c("salmon","skyblue","harmonic","harmleg"),width=8)
     #tkset(tkmethod)="SNHA"
     tkbind(tkcolor,"<<ComboboxSelected>>",this$asgChange)        
@@ -246,7 +247,8 @@ Rsnapp$gui = function (this) {
     tknotetraverse(tknb)
     # tips
     tktip(tkmeth,"select correlation method")
-    tktip(tkmeth,"select coloring method")    
+    tktip(tkmethod,"select graph type")    
+    tktip(tkcolor,"select coloring method")    
     tktip(tklay,"select plotting layout for graph")    
     tktip(tkvsize,"set vertex circle size")   
     tktip(tktsize,"set vertex text size")       
@@ -257,7 +259,6 @@ Rsnapp$gui = function (this) {
     this$cbvsize=tkvsize
     this$cbtsize=tktsize    
     this$cbmeth=tkmeth
-    this$cblay=tklay
     this$cbalpha=tkalpha
     this$gplot=gplot
     this$nbook=tknb
@@ -281,6 +282,8 @@ Rsnapp$asgChange = function (this) {
     t1=Sys.time()
     tryCatch( {
              data=this$rgs$getData()
+             idx=which(apply(data,2,var,na.rm=TRUE)!=0)
+             data=data[,idx]
              cnames=substr(colnames(data),1,5)
              if (any(table(cnames)>1)) {  
                  cnames=abbreviate(colnames(data),minlength=5)
@@ -307,7 +310,7 @@ Rsnapp$asgChange = function (this) {
              } else {
                  as=asg.new(data,method=method,alpha=alpha,threshold=0.01,check.singles=as.boolean(tclvalue(this$singlecheck)))
              }
-             if (!("lay" %in% names(this)) | !all(colnames(as$sigma) %in% colnames(data))) {
+             if (!("lay" %in% names(this))) { # | !all(colnames(as$sigma) %in% colnames(data))) {
                  laym=tclvalue(tkget(this$cblay))
                  this$lay=asg.layout(as,mode=laym)
              }
@@ -374,7 +377,10 @@ Rsnapp$asgRun = function (this) {
     }
     t1=Sys.time()
     tryCatch({
-    data=RGuiColSelect$getData()
+             data=RGuiColSelect$getData()
+             idx=which(apply(data,2,var,na.rm=TRUE)!=0)
+             data=data[,idx]
+
     cnames=substr(colnames(data),1,5)
     if (any(table(cnames)>1)) {  
         cnames=abbreviate(colnames(data),minlength=5)
@@ -434,7 +440,22 @@ Rsnapp$asgRun = function (this) {
         if (filter != "") {
             filter=paste(" - filter:",filter)
         }
-        this$gplot$plotLabel(plot,as,layout=this$lay,cex=tsize,
+        col="salmon"
+        lg=NULL
+        if (tclvalue(this$colorset)=="skyblue") {
+            col="skyblue"
+        } else if (tclvalue(this$colorset)=="harmonic") {
+            h=mgraph.harmonic_centrality(as)
+            vsize=vsize-2+6*h
+            col=mgraph.nodeColors(as,type="harmonic")
+        } else if (tclvalue(this$colorset)=="harmleg") {
+            h=mgraph.harmonic_centrality(as)
+            vsize=vsize-2+6*h
+            col=mgraph.nodeColors(as,type="harmonic")
+            lg=mgraph.nodeColors(as,type="harmonic",legend=TRUE)
+        }
+        
+        this$gplot$plotLabel(plot,as,layout=this$lay,cex=tsize,vertex.color=col,legend=lg,
                              vertex.size=vsize,edge.width=3,edge.text=edge.text,edge.pch=15,edge.cex=0.8*tsize,
                              main=paste("method:",method,"- alpha:",alpha,filter))
     }
