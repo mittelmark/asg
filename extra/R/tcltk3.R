@@ -163,7 +163,7 @@ tkpkginstall = function (x)  {
           r["CRAN"] <- "http://cran.r-project.org" 
           options(repos=r)
       })
-    repos="http://cran.uni-muenster.de/" #;"http://cran.fhcrc.org","https://cran.stat.unipd.it/","https://cran.stat.auckland.ac.nz/","https://cran.mirror.ac.za/","https://stat.ethz.ch/CRAN/","https://cran.ma.imperial.ac.uk/","http://cran.wustl.edu/"
+    repos="https://cran.uni-muenster.de/" #;"http://cran.fhcrc.org","https://cran.stat.unipd.it/","https://cran.stat.auckland.ac.nz/","https://cran.mirror.ac.za/","https://stat.ethz.ch/CRAN/","https://cran.ma.imperial.ac.uk/","http://cran.wustl.edu/"
     require(tools)
     deps=package_dependencies(x,recursive=TRUE)[[1]]
     print(deps)
