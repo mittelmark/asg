@@ -1,7 +1,11 @@
 ChangeLog
 ==========
 
-## Version 0.10.0 - January 2022
+## Version 0.10.1 - 2026-01-08
+
+- removing constant variables from SNHA from the beginning
+
+## Version 0.10.0 - 2026-01-07
 
 - own Github URL
 - adding harmonic centrality measure with demo for using in plotting

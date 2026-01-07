@@ -116,6 +116,11 @@ asg.new <- function (data,alpha=0.05,method='pearson',threshold=0.01,pcor=FALSE,
                      check.singles=FALSE,chains.clean=TRUE,
                      prob=FALSE,prob.threshold=0.2,prob.n=25) {
     t1=Sys.time()
+    if (!prob) {
+        ## eliminate constant columns
+        idx=which(apply(data,2,var)!= 0) 
+        data=data[,idx]
+    }
     if (prob) {
         # check for correlation matrix
         if (nrow(data)==ncol(data) &  

@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-modified ="File stamp: <20260107.0011>"
+modified ="File stamp: <20260107.1351>"
 
 # TODO:
 #   - side by side layout select columns and plot
@@ -307,7 +307,7 @@ Rsnapp$asgChange = function (this) {
              } else {
                  as=asg.new(data,method=method,alpha=alpha,threshold=0.01,check.singles=as.boolean(tclvalue(this$singlecheck)))
              }
-             if (!("lay" %in% names(this)) | !all(colnames(data)==colnames(as$sigma))) {
+             if (!("lay" %in% names(this)) | !all(colnames(as$sigma) %in% colnames(data))) {
                  laym=tclvalue(tkget(this$cblay))
                  this$lay=asg.layout(as,mode=laym)
              }
