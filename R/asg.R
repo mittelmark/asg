@@ -1243,14 +1243,18 @@ plot.asg = function (x,type='network',
                             }
                         }
                         if (is.matrix(edge.text) & lty > 0) {
-                            hx <- 0.5 * x1 + 0.5 * x2
-                            hy <- 0.5 * y1 + 0.5 * y2
+                            hx <- 0.55 * x1 + 0.45 * x2
+                            hy <- 0.55 * y1 + 0.45 * y2
                             if (edge.pch>0) {
-                                points(hx,hy,pch=edge.pch,cex=5*edge.cex,col="#cccccc")
+                                if (theta[i,j] != theta[j,i] | i > j) {
+                                    points(hx,hy,pch=edge.pch,cex=5*edge.cex,col="#cccccc")
+                                }
                             }
                             jitx=0;# jitter(diff(range(axTicks(1)))/30,amount=0.1)
                             jity=0; jitter(diff(range(axTicks(2)))/30,amount=0.1)
-                            text(hx+jitx,hy+jity,edge.text[i,j],cex=edge.cex,col=col)
+                            if (theta[i,j] != theta[j,i] | i > j) {
+                                text(hx+jitx,hy+jity,edge.text[i,j],cex=edge.cex,col=col)
+                            }
                         }
 
                     }

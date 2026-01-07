@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-modified ="File stamp: <20260107.1351>"
+modified ="File stamp: <20260107.1543>"
 
 # TODO:
 #   - side by side layout select columns and plot
@@ -65,8 +65,8 @@ if (exists("SCRIPTPATH")) {
     # sourced or Rscripted
     Rsnapp$FILENAME = thisFile()
 }
-Rsnapp$asg_version = "0.10.0"
-Rsnapp$version="0.8.0"
+Rsnapp$asg_version = "0.10.1"
+Rsnapp$version="0.8.1"
 Rsnapp$about = function (this) {
     tkmessageBox(
                  message = paste("snha - gui - St. Nicolas Application\n     @ 2026 Detlef Groth\n   University of Potsdam\n",R.version.string,
@@ -184,7 +184,7 @@ Rsnapp$gui = function (this) {
     tkbind(tkmeth,"<<ComboboxSelected>>",this$asgChange)
     tklay=ttkcombobox(tf4,values=c("sam","samd","mds","mdsd","circle"),width=6)
     tkset(tklay,"sam")
-    tkbind(tklay,"<<ComboboxSelected>>",function () { this$lay=NULL; this$asgRun() })
+    tkbind(tklay,"<<ComboboxSelected>>",function () { this$lay=NULL; this$asgChange() })
     tkvsize=ttkcombobox(tf4,values=3:10,width=6)
     tkbind(tkvsize,"<<ComboboxSelected>>",this$asgChange)
     tkset(tkvsize,7)

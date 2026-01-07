@@ -1,6 +1,6 @@
 ---
 title: Tutorial on the asg package - Network construction using the St. Nicolas House Analysism
-shorttitle: "asg package tutorial"
+shorttitle: "asg package tutorial 0. 10.1"
 author: Detlef Groth, University of Potsdam, Germany
 date: 2026-01-07
 abstract: >

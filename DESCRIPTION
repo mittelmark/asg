@@ -1,6 +1,6 @@
 Package: asg
 Title: Package for generating correlation networks based on association chains
-Version: 0.10.0
+Version: 0.10.1
 Authors@R: 
     c(person(given = "Detlef",
            family = "Groth",
