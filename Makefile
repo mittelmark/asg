@@ -59,7 +59,7 @@ pandoc:
 
 compile:
 	cd extra/tcl && tpack snha.tapp --lz4
-	Rscript extra/bin/rcompiler.R R/asg.R extra/R/Emil.R \
+	Rscript extra/bin/rcompiler.R R/mgraph.R R/asg.R extra/R/Emil.R \
 		extra/R/tktip.R extra/R/tcltk3.R extra/R/RGui.R \
 		extra/R/RGuiPlot.R extra/R/RGuiColSelect.R extra/R/snapp.R > snapp-app.R
 	if [ -d snha-gui.vfs ]; then rm -rf snha-gui.vfs ; fi

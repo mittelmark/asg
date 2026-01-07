@@ -2,3 +2,4 @@ extra/*
 repo/*
 Makefile
 snha-gui.vfs/*
+snha-win/*

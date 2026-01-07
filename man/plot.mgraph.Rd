@@ -14,8 +14,6 @@
 \item{\ldots}{all remaining arguments are forwarded to the asg.mplot function}
 }
 \description{
-plot a given graph or adjacency matrix
-
 This function is a plotting function for mgraph objects. All arguments are just forwarded to the asg.mplot function.
 }
 \examples{

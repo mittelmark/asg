@@ -2,8 +2,8 @@
 % Please edit documentation in R/asg.R, R/pkgname.R
 \docType{package}
 \name{asg-package}
-\alias{asg-package}
 \alias{asg}
+\alias{asg-package}
 \title{asg package - association chain graphs from correlation networks}
 \description{
 The asg package can b used to construct association chain graphs based on the St. Nicolas House algorithm as described in Groth et. 2019.

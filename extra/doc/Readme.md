@@ -142,8 +142,21 @@ There are further other visualizations available so for pairwise correlations
   * PCAsam PCA scores for the samples (PCAsam) 
   * Clustering analysis using correlation distance as *d(a,b) = 1 - abs (r(a,b))*.
 
-You can export all the plots by clicking on the save button on the left in the
-upper button bar. All plots will be then saved in a PDF file. 
+For the SNHA  algorithm  it is as well  possible to change the  coloring.  For
+example you might change the default salmon color to skyblue. Or you might use
+use the harmonic  centrality  measure to display highly  centralized  nodes in
+red, and  unconnected  or marginal nodes with light blue. A value of 1 for the
+harmonic  centrality  would mean that this node is directly  connected  to all
+other  nodes of the  graph,  so all  shortest  path for this  nodes  are 1. In
+contrast a value of zero for a node mean, that this node is not  connected  to
+any other node. For more  information on the harmonic mean have a look at this
+blog post by symbio5.nl:
+
+https://symbio6.nl/en/blog/analysis/harmonic-centrality
+
+**Hint:**  You can export all the plots by  clicking on the save button on the
+           left in the upper button bar. All plots will be then saved in a PDF
+           file. 
 
 ![](snappshot-02s.png)
 

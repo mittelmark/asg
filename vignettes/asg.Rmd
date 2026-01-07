@@ -1,24 +1,22 @@
 ---
-title: "Tutorial on the asg package - Network construction using the St. Nicolas House Algorithm"
+title: Tutorial on the asg package - Network construction using the St. Nicolas House Analysism
 shorttitle: "asg package tutorial"
 author: Detlef Groth, University of Potsdam, Germany
-date: 2021-10-21
+date: 2026-01-06
 abstract: >
     The *asg* package provides an easy to use interface to apply the St. Nicolas House Algorithm which traces associations chains between interactiving variables.
     In this package vignette the basic workflow for analyzing raw data or for analysing correlation matrices is demonstrated.
 bibliography: bibliography.bib
 csl: nature-biotechnology.csl
-
-documentclass: scrartcl
-geometry:
-- top=20mm
-- bottom=35mm
-- left=20mm
-- right=20mm
+output:
+  html_document:
+    css: tmdoc.css
+    theme: null
 vignette: >
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteIndexEntry{pkgname}
+  %\VignetteIndexEntry{Tutorial on the asg package - Network construction using the St. Nicolas House Analysis}
   %\usepackage[utf8]{inputenc}
+    
 ---
 
 ## Introduction
@@ -222,6 +220,31 @@ mtest = function (x) { return(shapiro.test(x)$p.value)  }
 df=data.frame(orig=round(apply(swiss,2,mtest),3))
 df=cbind(df,log2=round(apply(log2(swiss),2,mtest),3))
 knitr::kable(df)
+```
+
+## Creating Random Graphs
+
+The  package  as well  allows you to create  your some types of regular or random
+graphs using the _mgraph.new_ function. Here an example:
+
+```{r,fig=TRUE}
+B = mgraph.new(type="angie",nodes=15,edges=20)
+plot(B,layout="sam")
+mgraph.harmonic_centrality(B)
+```
+
+You can as well highlight  central nodes with red colors and isolated notes in
+blue color, using the so called harmonic centrality. Here an example:
+
+```{r,fig=TRUE,fig.width=9,fig.height=6}
+par(mar = c(5, 1, 1, 1), xpd = TRUE)
+B=mgraph.new(type="barabasi",nodes=15,edges=20)
+h=mgraph.harmonic_centrality(B)
+h
+cols=mgraph.nodeColors(B,type="harmonic")
+plot(B,vertex.size=4+5*h,layout="sam",vertex.color=cols)
+lg=mgraph.nodeColors(B,type="harmonic",legend=TRUE)
+legend("top",fill=lg$col, inset=c(1.0,1.0),legend=lg$legend,ncol=6,)
 ```
 
 ## Summary

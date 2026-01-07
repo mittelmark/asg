@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-modified ="File stamp: <20260106.1130>"
+modified ="File stamp: <20260107.0011>"
 
 # TODO:
 #   - side by side layout select columns and plot
@@ -82,6 +82,7 @@ Rsnapp$gui = function (this) {
     this$corplot=tclVar(FALSE)        
     this$correlations=tclVar(FALSE)
     this$method=tclVar("SNHA")
+    this$colorset=tclVar("salmon")    
     this$singlecheck=tclVar(FALSE)    
     tkimage.create("photo",this$imageRun,data="
                    R0lGODlhEAAQAIMAAPwCBAQCBPz+/ISChKSipMTCxLS2tLy+vMzOzMTGxNTS
@@ -199,6 +200,9 @@ Rsnapp$gui = function (this) {
     tkmethod=ttkcombobox(tf4,textvariable=this$method,values=c("SNHA","Cor","MDScor1","MDScor2","PCAsam","PCAvar","Cluster"),width=8)
     #tkset(tkmethod)="SNHA"
     tkbind(tkmethod,"<<ComboboxSelected>>",this$asgChange)        
+    tkcolor=ttkcombobox(tf4,textvariable=this$colorset,values=c("salmon","skyblue","harmonic","harmleg"),width=8)
+    #tkset(tkmethod)="SNHA"
+    tkbind(tkcolor,"<<ComboboxSelected>>",this$asgChange)        
 
     tklcp=ttklabel(tf4,text="Corplot:")
     tkbcp=ttkcheckbutton(tf4,variable=this$corplot,command=this$asgChange)
@@ -215,6 +219,7 @@ Rsnapp$gui = function (this) {
     tkpack(tkbbt,side="left",padx=2,pady=5)        
     tkpack(tklay,side="left",padx=5,pady=5)
     tkpack(tkmethod,side="left",padx=5,pady=5)    
+    tkpack(tkcolor,side="left",padx=5,pady=5)        
     #tkpack(tkbcp,side="left",padx=2,pady=5)        
     tkpack(tklcr,side="left",padx=5,pady=5)    
     tkpack(tkbcr,side="left",padx=2,pady=5)        
@@ -241,6 +246,7 @@ Rsnapp$gui = function (this) {
     tknotetraverse(tknb)
     # tips
     tktip(tkmeth,"select correlation method")
+    tktip(tkmeth,"select coloring method")    
     tktip(tklay,"select plotting layout for graph")    
     tktip(tkvsize,"set vertex circle size")   
     tktip(tktsize,"set vertex text size")       
@@ -257,7 +263,7 @@ Rsnapp$gui = function (this) {
     this$nbook=tknb
     this$setStatus("snha gui - St. Nicolas Application started! Open a Excel or a Tab file to analyze your data!")
     this$setProgress(90)
-    this$setTitle("snha gui - St. Nicolas application, 2022")
+    this$setTitle("snha gui - St. Nicolas application, 2026")
     tkpack(tknb,side='top',fill='both',expand=TRUE)
     tkwm.geometry(this$tt,"800x600+20+20")
 }
@@ -336,8 +342,22 @@ Rsnapp$asgChange = function (this) {
                  if (filter != "") {
                      filter=paste(" - filter:",filter)
                  }
-                 this$gplot$plotLabel(plot,as,layout=this$lay,cex=tsize,vertex.size=vsize,edge.width=3,edge.cex=0.8*tsize,
-                                      edge.text=edge.text,edge.pch=15,
+                 col="salmon"
+                 lg=NULL
+                 if (tclvalue(this$colorset)=="skyblue") {
+                     col="skyblue"
+                 } else if (tclvalue(this$colorset)=="harmonic") {
+                     h=mgraph.harmonic_centrality(as)
+                     vsize=vsize-2+6*h
+                     col=mgraph.nodeColors(as,type="harmonic")
+                 } else if (tclvalue(this$colorset)=="harmleg") {
+                     h=mgraph.harmonic_centrality(as)
+                     vsize=vsize-2+6*h
+                     col=mgraph.nodeColors(as,type="harmonic")
+                     lg=mgraph.nodeColors(as,type="harmonic",legend=TRUE)
+                 }
+                 this$gplot$plotLabel(plot,as,layout=this$lay,cex=tsize,vertex.size=vsize,edge.width=3,edge.cex=0.8*tsize,vertex.color=col,
+                                      edge.text=edge.text,edge.pch=15,legend=lg,
                                       main=paste("method:",method,"- alpha:",alpha, filter)) 
              }
          },
@@ -457,15 +477,19 @@ Rsnapp$saveReport = function (this) {
         writeData(wb,chains,sheet="Chains",rowNames=TRUE)
         
         openxlsx::addWorksheet(wb, "Settings")        
-        df=data.frame(Setting=c("R threshold", "alpha", "method","filter"),Values=c(as.character(this$asg$threshold),as.character(this$asg$alpha),this$asg$method),RGuiColSelect$getFilter())
+        df=data.frame(Setting=c("R threshold", "alpha", "method","filter"),Values=c(as.character(this$asg$threshold),as.character(this$asg$alpha),this$asg$method,RGuiColSelect$getFilter()))
         writeData(wb,df,sheet="Settings",rowNames=FALSE)
         
         openxlsx::addWorksheet(wb, "Data")        
         df=as.data.frame(this$asg$data)
         writeData(wb,df,sheet="Data",rowNames=TRUE)         
+        openxlsx::addWorksheet(wb, "Centrality")        
+        df=data.frame(nodes=colnames(this$asg$theta),harmonic=mgraph.harmonic_centrality(this$asg),degree=mgraph.degree(this$asg))
+        writeData(wb,df,sheet="Centrality")         
         #X11()
         corimg=file.path(dirname(filename),"cor.png")
         asgimg=file.path(dirname(filename),"asg.png")        
+        harimg=file.path(dirname(filename),"har.png")                
         pcaimg=file.path(dirname(filename),"pca.png")
 
         png(corimg,width=1000,height=1000)
@@ -475,6 +499,15 @@ Rsnapp$saveReport = function (this) {
         vsize=as.numeric(tclvalue(tkget(this$cbvsize))) ;       
         plot(this$asg,layout=this$lay,vertex.size=vsize,edge.width=2)  
         dev.off()
+        png(harimg,width=1000,height=800)
+        par(mar=c(5,1,2,1))
+        h=mgraph.harmonic_centrality(this$asg)
+        col=mgraph.nodeColors(this$asg,type="harmonic")
+        plot(this$asg,layout=this$lay,vertex.color=col,
+             vertex.size=vsize-2+5*h,edge.width=2)  
+        lg=mgraph.nodeColors(this$asg,type="harmonic",legend=TRUE)
+        legend("top",inset=c(1.0,1.0),fill=lg$col,legend=lg$legend)
+        dev.off()
         pca.data=this$asg$data
         pca.data=asg.impute(pca.data)
         idc=which(apply(pca.data,2,var) != 0)
@@ -483,10 +516,13 @@ Rsnapp$saveReport = function (this) {
         png(pcaimg,width=600,height=600)
         asg.pcaplot(prcomp(t(pca.data)))
         dev.off()
+        
         openxlsx::addWorksheet(wb, "Cor Plot",gridLines=FALSE)        
         openxlsx::insertImage(wb,"Cor Plot",corimg,startRow=1,width=10,height=10, units = "in")
         openxlsx::addWorksheet(wb, "Asg Plot",gridLines=FALSE)        
         openxlsx::insertImage(wb,"Asg Plot",asgimg,startRow=1,startCol=1,width=10,height=8, units = "in")
+        openxlsx::addWorksheet(wb, "Harmonic Plot",gridLines=FALSE)        
+        openxlsx::insertImage(wb,"Harmonic Plot",harimg,startRow=1,startCol=1,width=10,height=8, units = "in")
         openxlsx::addWorksheet(wb, "PCA Plot",gridLines=FALSE)        
         openxlsx::insertImage(wb,"PCA Plot",pcaimg,startRow=1,startCol=1,width=10,height=8, units = "in")
         pca=prcomp(pca.data)

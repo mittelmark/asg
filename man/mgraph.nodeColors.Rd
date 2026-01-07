@@ -4,12 +4,21 @@
 \alias{mgraph.nodeColors}
 \title{return node colors for directed graphs.}
 \usage{
-mgraph.nodeColors(g, col = c("skyblue", "grey80", "salmon"))
+mgraph.nodeColors(
+  g,
+  col = c("skyblue", "grey80", "salmon"),
+  type = "inout",
+  legend = FALSE
+)
 }
 \arguments{
 \item{g}{a mgraph object or an adjacency matrix or an adjacency list}
 
 \item{col}{default colors for nodes with only incoming, in- and outgoing and only outgoing edges, default: c("skyblue","grey80","salmon")}
+
+\item{type}{type of color selection, either "inout" or "harmonic" (centrality), default: "inout"}
+
+\item{legend}{should be colors and legend labels returned instead of colors, default: FALSE}
 }
 \description{
 This function simplifies automatic color coding of nodes for directed graphs.
@@ -17,7 +26,6 @@ This function simplifies automatic color coding of nodes for directed graphs.
   on their incoming and outcoming edges.
 }
 \examples{
-
 par(mfrow=c(1,2),mai=rep(0.1,4))
 A=mgraph.new(type="random",nodes=6,edges=8)
 cols=mgraph.nodeColors(A)

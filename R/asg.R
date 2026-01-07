@@ -1100,6 +1100,7 @@ asgp$new = function (data) {
 #' @param lty line type for standard edges in the graph, default: 1
 #' @param threshold cutoff values for bootstrap probabilities for drawing edges as dotted. broken lines and solid lines, default: c(0.25,0.5,0.75)
 #' @param interactive switch into interactive mode where you can click in the graph and move nodes with two clicks, first selecting the node, second click gives thehe new coordinates for the node, default: FALSE
+#' @param legend a list object with colors and labels which will be plotted below of the plot
 #' @param \dots curently not used 
 #' @return returns the layout of the plotted network or NULL if type is corplot (invisible) .
 #' @import graphics stats
@@ -1138,7 +1139,7 @@ plot.asg = function (x,type='network',
                      star.center=NULL,
                      plot.labels=TRUE,
                      lty=1,threshold=c(0.25,0.5,0.75),
-                     interactive=FALSE,...) {
+                     interactive=FALSE,legend=NULL,...) {
     g=x
     if (any(class(g) %in% "matrix")) {
         g=as.data.frame(g)
@@ -1295,7 +1296,13 @@ plot.asg = function (x,type='network',
                     lay=doPlot(g$theta,g$sigma,lay,probabilities=g$probabilities,cmatrix=cmatrix,...)
                 }
             }
+            if (class(legend)[1] != "NULL") {
+                par(mar=c(5,1,4,1),xpd=TRUE)
+            }
             doPlot(g$theta,g$sigma,lay,probabilities=g$probabilities,cmatrix=cmatrix,...)
+            if (class(legend)[1]!= "NULL") {
+                legend("top",fill=legend$col,legend=legend$legend,ncol=6,inset=c(1.0,1.0),cex=cex)
+            }
         } else {
             if (interactive) {
                 lay=doPlot(g,g,xy,probabilities=g,...)

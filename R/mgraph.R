@@ -298,6 +298,9 @@ mgraph.degree <- function (g,mode="undirected") {
     } else if (mode == "in") {
         g=t(g)
     } 
+    if (class(g) == "asg") {
+        g=g$theta
+    } 
     g[abs(g)!=0]=1
     d=apply(g,1,sum)
     names(d)=rownames(g)
@@ -325,10 +328,20 @@ mgraph.degree <- function (g,mode="undirected") {
 #' 
 
 mgraph.d2u <- function (g) {
+    h=g
+    asg=FALSE
+    if (class(g) == "asg") {
+        g=g$theta
+        asg=TRUE
+    }
     g[lower.tri(g)]=g[lower.tri(g)]+t(g)[lower.tri(g)]
     g[upper.tri(g)]=g[upper.tri(g)]+t(g)[upper.tri(g)]    
     g[g>0]=1
     g[g<0]=-1
+    if (asg) {
+        h$theta=g
+        g=h
+    }
     return(g)
 }
 
@@ -428,6 +441,41 @@ mgraph.pmatrix <- function (x,factor=1,mu=100,n=100) {
     return(t(data))
 }
 
+#' @title return the harmonic centraility for each node of a graph
+#' @description  This function returns the harmonic centrality for every node, of a graph
+#'     directed graphs are converted to unidirecred graphs before and then the following
+#'     formula is applied: \code{h = sum(1/d) / (n-1)} where d are the shortest paths
+#'     of a node to all other nodes of the graph and n ist the number of nodes in a graph.
+#' @param  g a mgraph object
+#' @param norm should the harmonic centrality normalized over the number of nodes, default: TRUE
+#' @references 
+#' \itemize{
+#' \item Marchiori, M., & Latora, V. (2000). Harmony in the small-world. Physica A: Statistical Mechanics and its Applications, 285(3-4), 539-546.
+#' }
+#' @examples
+#' B=mgraph.new(type="angie",nodes=20,edges=30)
+#' plot(B,layout="sam")
+#' mgraph.degree(B)
+#' mgraph.harmonic_centrality(B)
+#' cols=mgraph.nodeColors(B,type="harmonic")
+#' plot(B,layout="sam",vertex.color=cols)
+#' lg=mgraph.nodeColors(B,type="harmonic",legend=TRUE)
+#' legend("bottom",fill=lg$col, legend=lg$legend,ncol=6)
+#' @export
+
+mgraph.harmonic_centrality <- function (g,norm=TRUE) {
+    sp=asg.shortest.paths(g,mode="undirected")
+    diag(sp)=Inf
+    if (norm) {
+        res=apply(sp,1,function (x) { (sum(1/x))/(length(x)-1) })
+    } else {
+        res=apply(sp,1,function (x) { (sum(1/x)) })
+    }        
+    
+    names(res)=rownames(g)
+    return(res)
+}
+
 #' 
 #' @title return node colors for directed graphs.
 #' 
@@ -437,9 +485,10 @@ mgraph.pmatrix <- function (x,factor=1,mu=100,n=100) {
 #' 
 #' @param g a mgraph object or an adjacency matrix or an adjacency list
 #' @param col default colors for nodes with only incoming, in- and outgoing and only outgoing edges, default: c("skyblue","grey80","salmon")
+#' @param type type of color selection, either "inout" or "harmonic" (centrality), default: "inout"
+#' @param legend should be colors and legend labels returned instead of colors, default: FALSE
 #'
 #' @examples
-#' 
 #' par(mfrow=c(1,2),mai=rep(0.1,4))
 #' A=mgraph.new(type="random",nodes=6,edges=8)
 #' cols=mgraph.nodeColors(A)
@@ -452,19 +501,40 @@ mgraph.pmatrix <- function (x,factor=1,mu=100,n=100) {
 #' @export
 #' 
 
-mgraph.nodeColors <- function (g,col=c("skyblue","grey80","salmon")) {
-    colors = rep(col[2],nrow(g))
-    out    = mgraph.degree(g,mode="out")
-    inc     = mgraph.degree(g,mode="in")    
-    colors[out >  0 & inc == 0] = col[3]
-    colors[out == 0 & inc >  0] = col[1]    
-    return(colors)
+mgraph.nodeColors <- function (g,col=c("skyblue","grey80","salmon"),type="inout",legend=FALSE) {
+    if (type == "inout") {
+        if (legend) {
+            return(list(legend=c("out","inout","in"),
+                        col=col))
+        }
+        colors = rep(col[2],nrow(g))
+        out    = mgraph.degree(g,mode="out")
+        inc     = mgraph.degree(g,mode="in")    
+        colors[out >  0 & inc == 0] = col[3]
+        colors[out == 0 & inc >  0] = col[1]    
+        return(colors)
+    } else if (type == "harmonic") {
+        cols=c("#ccffff","#ccdddd","#cccccc","#eecccc","#ee8888","#ee3333")
+        h = mgraph.harmonic_centrality(g)
+        c=cut(h,breaks=c(0,0.01,0.2,0.4,0.6,0.8,1),include.lowest=TRUE)
+        if (legend) {
+            return(list(legend=levels(c),
+                   col=cols))
+        }
+        lvls=as.character(c)
+        c=as.numeric(c)
+        cs = cols[c]
+        names(cs)=lvls
+        return(cs)
+    } else {
+        stop("Error: type must be either 'inout' or 'harmonic'!")
+    }
 }
 
 #' 
 #' @title plot a given graph or adjacency matrix
 #' 
-#' @title This function is a plotting function for mgraph objects. All arguments are just forwarded to the asg.mplot function.
+#' @description This function is a plotting function for mgraph objects. All arguments are just forwarded to the asg.mplot function.
 #' 
 #' @param x a mgraph object or an adjacency matrix or an adjacency list
 #' @param layout the layout, either a matrix or string in addition to the layout parameters for plot.asg the layout strings 'werner' for 6 node graphs and 'orion' for 20 node graphs are supported, default: 'sam'
