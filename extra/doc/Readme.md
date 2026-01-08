@@ -169,13 +169,16 @@ The analysis with the information about the graph and the data as well some
 PCA analysis results can be saved using the "File->Save Report" menu entry. The resulting Excel file contains the following sheets:
 
   * "Adjacency matrix" - which node/variable is connect with which, an entry of 1 means they are connecred
-  * "Cor pearson" - the correlation values for all variable pairs
+  * "Cor pearson/spearman" - the correlation values for all variable pairs
   * "Cor p-values" - the correlation p-values for all variable pairs
   * "Chains" - the found St. Nicolas chains forming the final graph
   * "Settings" - the used settings to perform the analysis
   * "Data" - the input data for the algorithm  
+  * "Centrality" - the degree and harmonic centrality values for all nodes
   * "Cor Plots" - the pairwise correlation plot
   * "Asg Plot" - the graph plot based on the association matrix
+  * "Harmonic Plot" - the graph plot based on the  association  matrix  with color codes related to the harmonic centrality
+  * "PCAPlot*" - plot of the PCA for the scaled variables
   * "PCAImportance" - the importance values for the PC's
   * "PCARotation" - the contributions of the variables to the new components
   * "PCAData" - the scaled data used for the PCA, NA's where imputed using the median before
@@ -327,13 +330,16 @@ your system. If you use the application please cite the URL at github and the fo
   * adding csv loading support
   * adding PCA imputation
 
-**Version 0.8.0 - Januar 2026**
+**Version 0.8.0 - January, 7th 2026**
   
   * adding support for harmonic centrality in node coloring
   * fixing Excel report saving
   * redesign of project and new Github project at
     https://github.com/mittelmark/asg for GUI and package
     
+**Version 0.8.1 - January, Xth 2026**
+
+  * automatic removal of variables with zero variance in the analysis
 
 -----
 
