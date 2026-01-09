@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/mittelmark/asg.svg?label=current+release)](https://github.com/mittelmark/asg/releases)
 ![Downloads](https://img.shields.io/github/downloads/mittelmark/asg/total)
 ![Commits](https://img.shields.io/github/commits-since/mittelmark/asg/latest)
-[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/latest/releases/Readme.pdf
+[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/latest/releases/Readme.pdf)
 [![Docu Package](https://img.shields.io/badge/Docu-Package-blue)](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg-tutorial.pdf)
 
 __asg__ - association  chain graph package, first  implementation  of the SNHA
@@ -26,7 +26,11 @@ either using your package manager or usually for Windows and Mac-OSX using the d
  
 ## St. Nicolas House Analysis - Graphical User Interface
 
+__Data Selection:__
+
 ![](extra/doc/snappshot-01s.png?raw=true)
+
+__Plot Generation:__
 
 ![](extra/doc/snappshot-02s.png?raw=true)
 
