@@ -95,7 +95,7 @@ Usually these logical expressions should be used for qualitative data like sex w
 
 ## <a name="analysis">Analysis</a>
 
-Therafter you switch to the *Analysis* tab of the application. Just use the
+Thereafter you switch to the *Analysis* tab of the application. Just use the
 default settings here *Pearson* correlation and a p-value threshold of 0.05.
 And press the analyze button at the lower left. You analyis is shown on the
 image widget on top. Please note, that even if the image quality looks rather
@@ -154,6 +154,27 @@ blog post by symbio5.nl:
 
 https://symbio6.nl/en/blog/analysis/harmonic-centrality
 
+In short if you do not have the time to read that page. A normalized  harmonic
+mean is the average  inverse of all shortest  path lengths of a specific node to
+all other  nodes. So a value of 1 means that the node is  connected  to all other  nodes
+directly,  a value of zero means that the node is not  connected  to any other
+node. Here an example graph:
+ 
+
+             B --- A --- C
+
+So the values for **A** is: (1/1 + 1/1) / 2 = 1 (both paths have length 1)
+
+The  value for **B** and **C** is: (1/1 + 1/2) / 2 = 0.75 (we have two paths of length 1 and 2)
+
+So the formula is: *h = sum(s_i)/N-1*
+
+where:
+
+  * *hi:* is the harmonic mean of node *i*
+  * *si*: is the vector of all shortest paths to all other nodes for node *i*
+  * *N*:  is the number of nodes
+  
 **Hint:**  
 You can export all the plots by  clicking on the save button on the
 left in the upper button bar. All plots will be then saved in a PDF
@@ -337,7 +358,7 @@ your system. If you use the application please cite the URL at github and the fo
   * redesign of project and new Github project at
     https://github.com/mittelmark/asg for GUI and package
     
-**Version 0.8.1 - January, Xth 2026**
+**Version 0.8.1 - January, 9th 2026**
 
   * automatic removal of variables with zero variance in the analysis
 
