@@ -4,7 +4,7 @@
 [![Release](https://img.shields.io/github/v/release/mittelmark/asg.svg?label=current+release)](https://github.com/mittelmark/asg/releases)
 ![Downloads](https://img.shields.io/github/downloads/mittelmark/asg/total)
 ![Commits](https://img.shields.io/github/commits-since/mittelmark/asg/latest)
-[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/latest/releases/download/Readme.pdf)
+[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/releases/latest/download/Readme.pdf)
 [![Docu Package](https://img.shields.io/badge/Docu-Package-blue)](https://github.com/mittelmark/asg/releases/latest/download/asg-tutorial.pdf)
 
 __asg__ - association  chain graph package, first  implementation  of the SNHA
@@ -105,26 +105,28 @@ Please use the Github isses page to report problems and to give suggestions:
 ### ChangeLog
 
 * __GUI__
-    * Version 0.7.0 (2022-10-27)
-        * adding data filtering
-        * two MDS distances can be used
-        * correlation values can be shown on the graph
+    * Version 0.8.1 - asg 0.10.1 (2026-01-09) 
+    [Manual](https://github.com/mittelmark/asg/releases/download/v0.10.1/Readme.pdf),
+    [Windows](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-install.exe),
+    [Linux/FreeBSD](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-gui.Rz),
+    [MacOS](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-gui-osx.Rz)
     * Version 0.8.0 (2026-01-07)
         * fixing install issues on Windows
         * fixing issues with export of Excel sheets
         * adding support for harmonic centrality giving colored nodes
+    * Version 0.7.0 (2022-10-27)
+        * adding data filtering
+        * two MDS distances can be used
+        * correlation values can be shown on the graph
         
 * __Library:__
-    * Version 0.8.1
-        - adding plot option edge.text
-    * Version 0.8.2
-        - adding asg.impute
-        - adding as.list S3 method for writing report with openxlsx
-    * Version 0.8.3
-        - adding asg.mdsplot
-        - adding asg.pcadata
-        - adding asg.impute
-        - adding asg.nd - network deconvolution
+    * version 0.10.1 - 2026-01-08 [Manual](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg-tutorial.pdf)
+      [Package](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg_0.10.1.tar.gz)
+        - remove variables with zero variance automatically
+    * version 0.10.0 - 2026-01-07
+        - adding support for harmonic centrality measure
+        - adding support for plotting colored nodes based on centrality measures
+        - extending documentation for the package
     * Version 0.9.0
         - adding mgraph methods to create different graphs and data for them using Monte Carlo simulations
         - adding mgraph.new
@@ -134,12 +136,16 @@ Please use the Github isses page to report problems and to give suggestions:
         - adding mgraph.nodeColors
         - adding mgraph.u2d
         - adding plot.mgraph
-    * version 0.10.0
-        - adding support for harmonic centrality measure
-        - adding support for plotting colored nodes based on centrality measures
-        - extending documentation for the package
-    * version 0.10.1
-        - remove variables with zero variance automatically
+    * Version 0.8.3
+        - adding asg.mdsplot
+        - adding asg.pcadata
+        - adding asg.impute
+        - adding asg.nd - network deconvolution
+    * Version 0.8.2
+        - adding asg.impute
+        - adding as.list S3 method for writing report with openxlsx
+    * Version 0.8.1
+        - adding plot option edge.text
 
 ## Links
 
