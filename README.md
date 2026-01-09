@@ -4,8 +4,8 @@
 [![Release](https://img.shields.io/github/v/release/mittelmark/asg.svg?label=current+release)](https://github.com/mittelmark/asg/releases)
 ![Downloads](https://img.shields.io/github/downloads/mittelmark/asg/total)
 ![Commits](https://img.shields.io/github/commits-since/mittelmark/asg/latest)
-[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/latest/releases/Readme.pdf)
-[![Docu Package](https://img.shields.io/badge/Docu-Package-blue)](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg-tutorial.pdf)
+[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/latest/releases/download/Readme.pdf)
+[![Docu Package](https://img.shields.io/badge/Docu-Package-blue)](https://github.com/mittelmark/asg/releases/latest/download/asg-tutorial.pdf)
 
 __asg__ - association  chain graph package, first  implementation  of the SNHA
 algorithm. This package mainly exists to build a GUI version of the algorithm.
