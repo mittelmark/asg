@@ -46,7 +46,11 @@ vignette:
 	rm -rf vignettes/figure
 	
 pdf:
-	 pandoc $(pkg)/doc/$(pkg).html -V geometry:"top=2cm, bottom=2cm, left=2cm, right=2cm" --pdf-engine=xelatex -o $(pkg)/doc/$(pkg).pdf
+	weasyprint asg.Rcheck/asg/doc/asg.html -s vignettes/small.css asg-tutorial.pdf
+	cp vignettes/tmdoc.css extra/doc/
+	mndoc extra/doc/Readme.md extra/doc/Readme.html --css tmdoc.css
+	weasyprint extra/doc/Readme.html -s vignettes/small.css extra/doc/Readme.pdf
+
 pandoc:
 	cd $(pkg)/vignettes &&	echo 'library(knitr);  knit("$(pkg).Rmd","$(pkg).md");' | R --slave
 	cd $(pkg)/vignettes &&	pandoc -s $(pkg).md -o $(pkg).html

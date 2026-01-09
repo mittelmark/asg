@@ -1,15 +1,173 @@
 # asg
 
+[![license](https://img.shields.io/badge/license-MIT-lightgray.svg)](https://opensource.org/license/mit)
+[![Release](https://img.shields.io/github/v/release/mittelmark/asg.svg?label=current+release)](https://github.com/mittelmark/asg/releases)
+![Downloads](https://img.shields.io/github/downloads/mittelmark/asg/total)
+![Commits](https://img.shields.io/github/commits-since/mittelmark/asg/latest)
+[![Docu App](https://img.shields.io/badge/Docu-App-blue)](https://github.com/mittelmark/asg/latest/releases/Readme.pdf
+[![Docu Package](https://img.shields.io/badge/Docu-Package-blue)](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg-tutorial.pdf)
+
 __asg__ - association  chain graph package, first  implementation  of the SNHA
 algorithm. This package mainly exists to build a GUI version of the algorithm.
 If you like to use the algorithm for you analysis it is recommended to install
 the SNHA package.
 
+This github pages host the GUI application and the R-library for the St.
+Nicolas House Algorithm which allows to create correlation networks based on
+association chains. For more background on the theory of this algorithm have a look at the following publications:
+
+* Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in stunted Indonesian children depends directly on parental education and not via a nutrition mediated pathway-Evidence from tracing association chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451. [DOI: 10.1127/anthranz/2019/1027](https://doi.org/10.1127/anthranz/2019/1027)
+* Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for Detecting Associations in Interacting Variables - St. Nicolas House Analysis. Int J Env Res Pub Health, 18(4), 1741. [DOI: 10.3390/ijerph18041741](https://doi.org/10.3390/ijerph18041741)
+
+The graphical application and the library needs an installed version of [R](https://www.r-project.org) on
+your computer. To use this software from this page please install R first
+either using your package manager or usually for Windows and Mac-OSX using the download facilities of the R-project:
+[https://cran.r-project.org/mirrors.html](https://cran.r-project.org/mirrors.html)
+ 
+## St. Nicolas House Analysis - Graphical User Interface
+
+![](extra/doc/snappshot-01s.png?raw=true)
+
+![](extra/doc/snappshot-02s.png?raw=true)
+
+### Windows
+
+For users which are not experienced R users there exists a graphical user
+interface which can be installed either using the standalone single R-script
+file or, for Windows systems, using a Windows installer which can be downloaded from here:
+
+[snha-install.exe](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-install.exe)
+
+### Linux / MacOS / FreeBSD
+
+For Unix  systems  like  Linux,  FreeBSD  or MacOS  there is as a single  file
+application: 
+
+- Linux/FreeBSD [snha-gui.Rz](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-gui.Rz)
+- MacOS [snha-gui-macos.Rz](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-gui-osx.Rz)
+
+Download this file and either run the file directly from a terminal with Rscript like this
+
+```
+Rscript /path/to/snha-gui.Rz
+```
+
+or make the file  executable  like this `chmod 755  snha-gui.Rz` or 
+`chmod 755 snha-gui-macos.Rz`and move the
+file thereafter to a folder belonging to your PATH variable and renaming it to
+`snha-gui` or so , so that you can execute this
+file from any folder by just typing  `snha-gui` in the terminal  regardless
+of your current working directory.  
+
+
+### MacOS
+
+Please note, that on Mac-OS you need usually to have a X-Server installation
+for instance of [XQuartz](https://www.xquartz.org/) and you have to start the application from a
+X-terminal. In some cases you might as well change the first line of the file
+`snha-gui.Rz` so that it points to the right Rscript interpreter on your hard disk.
+
+## Library
+
+For advanced users as well the R-library can be download and installed
+separately. It offers more features to modify the analysis and the graphical
+output then the GUI but needs the usual knowledge of the R statisical programming language.
+
+You can install the package directly from Github using the following lines of code from within your R-console:
+
+```
+URL="https://github.com/mittelmark/asg/releases/download/v0.10.1/asg_0.10.1.tar.gz"
+install.packages(URL,repos=NULL)
+library(asg)
+```
+
+You should be then able to start to analyse your data like this:
+
+```
+data(swiss)
+data=swiss # fill in your data
+as=asg.new(data)
+plot(as,layout="sam")
+```
+
+A good place to start is the help page of the *asg.new* function.
+
+### Bugs
+
+Please use the Github isses page to report problems and to give suggestions:
+
+[https://github.com/mittelmark/asg/issues](https://github.com/mittelmark/asg/issues)
+
+### ChangeLog
+
+* __GUI__
+    * Version 0.7.0 (2022-10-27)
+        * adding data filtering
+        * two MDS distances can be used
+        * correlation values can be shown on the graph
+    * Version 0.8.0 (2026-01-07)
+        * fixing install issues on Windows
+        * fixing issues with export of Excel sheets
+        * adding support for harmonic centrality giving colored nodes
+        
+* __Library:__
+    * Version 0.8.1
+        - adding plot option edge.text
+    * Version 0.8.2
+        - adding asg.impute
+        - adding as.list S3 method for writing report with openxlsx
+    * Version 0.8.3
+        - adding asg.mdsplot
+        - adding asg.pcadata
+        - adding asg.impute
+        - adding asg.nd - network deconvolution
+    * Version 0.9.0
+        - adding mgraph methods to create different graphs and data for them using Monte Carlo simulations
+        - adding mgraph.new
+        - adding mgraph.components
+        - adding mgraph.degree  
+        - adding mgraph.d2u
+        - adding mgraph.nodeColors
+        - adding mgraph.u2d
+        - adding plot.mgraph
+    * version 0.10.0
+        - adding support for harmonic centrality measure
+        - adding support for plotting colored nodes based on centrality measures
+        - extending documentation for the package
+    * version 0.10.1
+        - remove variables with zero variance automatically
+
 ## Links
 
 - [snha package](https://github.com/mittelmark/snha) - for any OS running R
-- [snha  GUI](https://github.com/mittelmark/snha-gui)  - for Windows, MacOS, Linux
-and FreeBSD
+- [snha  GUI](https://github.com/mittelmark/snha-gui)  - for  Windows,  MacOS,
+  Linux and FreeBSD
+ 
+### License 
+
+The code is released using the MIT license.
+
+Copyright 2022-2026, Detlef Groth, University of Potsdam, Germany
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
 
 
 
