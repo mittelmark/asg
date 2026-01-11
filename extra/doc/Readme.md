@@ -1,5 +1,5 @@
 ---
-title: "snha - Application for the St. Nicolas House Algorithm"
+title: "snha - Application for the St. Nicolas House Analysis Algorithm"
 shorttitle: "St. Nicolas App"
 author: 
 - Detlef Groth, University of Potsdam
@@ -26,115 +26,138 @@ date: 2022-02-16
 ## <a name="intro">Introduction</a>
 
 The application provides a graphical user interface for the St. Nicolas House
-Algorithm. The algorithm basically finds variables where correlations between
-the variables are decreasing in the same manner for forwad and reverse ordered
-variables. To give an example assume we have the variables *A*, *B* and *C*: 
-if the forward ordering *r(A,B)* > *r(A,C)* and in the reverse *r(C,B)* > *r(C,A)*
-we have an association chain.
+Analysis (SNHA) Algorithm. The algorithm essentially identifies variables
+where the correlations between them are decreasing in the same way for
+forward and reverse ordered variables. For example assume we have the
+variables *A*, *B* and *C*, if the forward ordering *r(A,B)* > *r(A,C)* and
+in the reverse *r(C,B)* > *r(C,A)* then we have an association chain.
 
-For a detailed background on the algorithm have a look at the following two papers:
+For a detailed background on the algorithm, please refer to the following two
+papers:
 
-  * Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in stunted Indonesian children depends directly on parental education and not via a nutrition mediated pathway-Evidence from tracing association chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
-  * Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for Detecting Associations in Interacting Variables - St. Nicolas House Analysis. Int J Env Res Pub Health, 18(4), 1741.
+  - Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in
+    stunted Indonesian children depends directly on parental education and
+    not via a nutrition mediated pathway-Evidence from tracing association
+    chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
 
-There exists a R package for the algorithm which will be relased to the CRAN
-repository quite soon. For researches which are not R users the graphical
-user interface provided with this package is an alternative to create networks
-of interacting variables using a standard open and click interface. 
+  - Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for
+    Detecting Associations in Interacting Variables - St. Nicolas House
+    Analysis. Int J Env Res Pub Health, 18(4), 1741.
 
-The workflow of the application consists actually from the following steps.
+There exists a R package for the algorithm "snha" which was relased to the
+CRAN repository. To install the package just write the following line into
+your R-console:
 
-  * prepare your data in an Excel or Tab file
-  * open a  Excel or Tab file with the data
-  * select the appropiate columns for analysis 
-  * please note that all column names will be abbreviated to the first 5 letters of the column names to allow correct display in the graph
-  * perform the analysis with some standard settings (Pearson correlation, p-value thresold 0.05 or 0.1 usually)
-  * export the analysis to an Excel file
 
-In the following sections we will describe the analysis.
+     install.packages("snha")
+     
+In case your would like to install the latest package version directly from
+the project page, please refer to https://github.com/mittelmark/snha
+
+For researchers who are not R developers, the graphical user interface
+provided with this application offers an alternative way to create networks
+of interacting variables using a standard open-and-click interface.
+
+The application's workflow consists actually of the following steps:
+
+  - Prepare your data in an Excel or Tab file.
+  - Open an Excel or Tab file containing the data.
+  - Select the appropriate columns for analysis.
+  - Please note that all column names will be abbreviated to the first five
+    letters of the column names to allow correct display in the graph.
+  - Perform the analysis using standard settings (usually Pearson
+    correlation, p- value threshold of 0.05 or 0.1)
+  - Export the analysis to an Excel file.
+
+The following sections we will describe the analysis.
 
 -----
 
 ## <a name="datapre">Data Preparation</a>
 
-You might start with the demo data. Before you analyse your own data. For a
-look on how to work with the demo data have a look a the [Demo Data](#demo)
-section.
+You could start by looking at the demo data. This will help you prepare for
+analyze your own data. To see how to work with the demo data, take a look at
+the [Demo Data](#demo) section.
 
-The application can process Excel-Data in the format *xlsx* and tabulated
-files where columns are separated by tab stops and the first row contains the
-column headers. In Excel files all tab sheets can be used to read in data.
-Please use short column names which should be placed in the first row. The
-column names should be without special symbols and spaces. Remove any formatting from the files in case of problems.
-For the display in the network visualization only the first 5 letters and numbers of the column
-names will be used. Column names should not start with numbers.
+The application can process Excel data in the *xlsx* format and tabulated
+files where the columns are separated by tab stops and the first row contains
+the column headers. In Excel files all tab sheets can be used to import data.
+Please use short column names which should be placed in the first row. Column
+names should not contain special symbols or spaces. Remove any formatting
+from the files if you encounter any problems. For display in the network
+visualization only the first five letters and numbers of the column names will
+be used. Column names should not start with numbers.
 
 -----
 
 ## <a name="datasel">Data Selection</a>
 
-The Excel or the tab files can be loaded using the "File Open" button or the
-"File-Open File" menu entry. The first 200 lines will be displayed thereafter
-in the table widget. You can thereafter select and unselect the columns by
-clicking on the column. Visual indicators in the column headers will confirm
-if a column is selected (green checkmark) or unselect (red cross symbol).
-After you selected the columns you can process the data by switching to the
+You can load the Excel or Tab files using the "File Open" button or the
+"File > Open File" menu option. The first 200 lines will be then displayed in
+the table widget. You can then select and deselect columns by clicking on the
+column header. Visual indicators in the column headers will confirm if a
+column is selected (green checkmark) or deselected (red cross symbol). After
+selecting the columns, you can process the data by switching to the
 *Analysis* tab.
+
 
 ![](snappshot-01s.png)
 
-Right of the "Select Sheet" combobox is as well a "Filter" entry field where
-you can add logical expressions using the Sytnax "colname > value" supported operators are here greater >, smaller <, equality == and unequality !=. Several expressions can be combined with the ampersand sign "&" for the AND operator and the pipe sign "|" for the OR operator. Here an example for the swiss data set.
+To the right of the "Select Sheet" combo box is a "Filter" entry field where
+you can add logical expressions using the syntax "colname > value". Supported
+operators include greater than (>), smaller (<), equality (== ) and inequality (!=).
+You can combine several expressions with the ampersand sign ("&") for the AND
+operator and the pipe sign ("|") for the OR operator. Here an example for the
+swiss data set.
 
-"Fertility > 70 and Examination < 20" would only show and use data with
-Fertility values greater than 70 and Examination values samller than 20.
-Usually these logical expressions should be used for qualitative data like sex where we have mostly only two values.
-
+"Fertility > 70 & Examination < 20" for example, would only show and use data
+with fertility values greater than 70 and examination values smaller than 20.
+These logical expressions can be used as for qualitative data like sex where
+we there are usually only two values in the data.
 
 -----
 
 ## <a name="analysis">Analysis</a>
 
-Thereafter you switch to the *Analysis* tab of the application. Just use the
-default settings here *Pearson* correlation and a p-value threshold of 0.05.
-And press the analyze button at the lower left. You analyis is shown on the
-image widget on top. Please note, that even if the image quality looks rather
-poor on some systems, by exporting the image using the save button on top you can create high
-quality graphics in the PDF format. 
+Next, switch to the *Analysis* tab of the application. Use the default
+settings: here *Pearson* correlation and a p-value threshold of 0.05. Then,
+press the Analyze button at the left. Your analysis is shown in the image
+widget below. Please note that even if the image quality appears poor on some
+systems, you can create high-quality graphics in PDF-format by exporting the
+image using the Save button at the top.
 
-You can play around with the analysis options at the bottom, all graphs will
-be saved. Usually however the settings "Pearson" or "Spearman" and a p-value threshold of 0.05
-are recommended. If you like to change the layout just press the tool button
-on the lower left. There are as well layout options, such as:
+Feel free to experiment with the analysis options, all graphs will be saved.
+However, the settings "Pearson" or "Spearman" and a p-value threshold of 0.05
+are usually recommended. If you would like to change the layout, just press
+the tool button on the left. There are also different layout options, such as:
 
-  * 'sam' - non-metric MDS on the graph data, i.e. on the adjacency matrix, 
-  * 'samd' - non metric MDS on the data itself,
-  * 'mds' - metric MDS on the graph data,
-  * 'mdsd' - metric MDS on the data itself,  
+  * 'sam'    - non-metric MDS on the graph data, i.e. on the adjacency matrix, 
+  * 'samd'   - non metric MDS on the data itself,
+  * 'mds'    - metric MDS on the graph data,
+  * 'mdsd'   - metric MDS on the data itself,  
   * 'circle' - circular layout
   
-More layout options such as Fruchterman-Reingold or star layout might be added in the future.
-The image of the plot size can be adjusted by using the arrow buttons at
-the bottom of the graph. Please note, that if you choose the Kendall-Tau method to calculate the correlations
-R will try to install a fast implementation of this algorithm using the *pcaPP* package.
-To show the the correlations between connected nodes you can use the checkbox "Correlations" on the right.
+Additional layout options, such as Fruchterman-Reingold or star layout may be
+added in the future. You can adjust the size of the plot image using the
+arrow buttons above of the image. Please note that if you select the
+Kendall-Tau method to calculate the correlations R will attempt to install a
+fast implementation of this algorithm using the *pcaPP* package. To show the
+correlations between connected nodes, check the "Correlations" box on the right.
 
-There is as well a bootstrap checkbox which does a resampling of the samples
-with replacement. Stable edges should be found in most of the resamplings. The
-line type encodes how often a edge was found, dotted lines indicate edges
-which were found in 25-50 percent of the resamplings, broken lines indicate
-edges which were found in 50-75 percent of the resamplings and solid lines
-indicate edges found in more than 75 percent of the resamplings. In empirical
-investigations we observed that random data produce usually edges which appear
-in less than 10 percent of the resamplings (Hake 2022, personal
-communication). So we can consider edges which appear in more than 25 percent
-of the resamplings as significant.
+There is also a bootstrap checkbox that enables resampling with replacement.
+Stable edges should be found in most of the resamplings. The line type
+indicates how often an edge was found: dotted lines indicate edges which were
+found in 25-50% of resamplings, broken lines indicate edges which were found
+in 50-75% of resamplings, and solid lines indicate edges found in more than
+75% of resamplings. In empirical investigations, we have observed that random
+data usually produce edges that appear in fewer than 10% of resamplings (T.
+Hake 2022, personal communication). THerefore, we can consider edges that
+appear in more than 25% of resamplings as significant.
 
-There is a well a checkbox if you want to check nodes which are not to in
-association chains for significant pairwise correlations (Singlecheck). 
+There is a checkbox if you want to select nodes that are not to in
+association chains for significant pairwise correlations (single-check). 
 
-There are further other visualizations available so for pairwise correlations
-(Cor), 
+Further visualizations are available for pairwise correlations (Cor):
 
   * MDScor1 using correlation distance with formula *d(a,b) = 1-abs(r(a,b))* where highly negatively correlated variables have a low distance, they are displayed closely to each other 
   * MDScor2 using MDS using correlation distance with formula *d(a,b) = (1-r(r,ab))/2* where negatively correlated variables are far apart from each other
@@ -142,23 +165,23 @@ There are further other visualizations available so for pairwise correlations
   * PCAsam PCA scores for the samples (PCAsam) 
   * Clustering analysis using correlation distance as *d(a,b) = 1 - abs (r(a,b))*.
 
-For the SNHA  algorithm  it is as well  possible to change the  coloring.  For
-example you might change the default salmon color to skyblue. Or you might use
-use the harmonic  centrality  measure to display highly  centralized  nodes in
-red, and  unconnected  or marginal nodes with light blue. A value of 1 for the
-harmonic  centrality  would mean that this node is directly  connected  to all
-other  nodes of the  graph,  so all  shortest  path for this  nodes  are 1. In
-contrast a value of zero for a node mean, that this node is not  connected  to
-any other node. For more  information on the harmonic mean have a look at this
-blog post by symbio5.nl:
+For the SNHA plots it is also possible to change the coloring. For example,
+you can change the default salmon color to sky blue. Alternatively, you could
+use use the harmonic centrality measure to display highly centralized nodes
+in red, and unconnected or marginal nodes in light blue. A value of 1 for the
+harmonic centrality would mean that the node is directly connected to all
+other nodes in the graph, so all shortest paths for this node are 1. In
+contrast, a value of zero means that the node is not connected to any other
+node. For more information on the harmonic mean, see this blog post by
+symbio5.nl:
 
 https://symbio6.nl/en/blog/analysis/harmonic-centrality
 
-In short if you do not have the time to read that page. A normalized  harmonic
-mean is the average  inverse of all shortest  path lengths of a specific node to
-all other  nodes. So a value of 1 means that the node is  connected  to all other  nodes
-directly,  a value of zero means that the node is not  connected  to any other
-node. Here an example graph:
+In short, if you don't have time to read that page: A normalized harmonic
+mean is the average inverse of all shortest path lengths from a specific node
+to all other nodes. A value of 1 means that the node is connected to all
+other nodes directly. A value of zero means that the node is not connected to
+any other node. Here an example graph:
  
 
              B --- A --- C
@@ -176,9 +199,8 @@ where:
   * *N*:  is the number of nodes
   
 **Hint:**  
-You can export all the plots by  clicking on the save button on the
-left in the upper button bar. All plots will be then saved in a PDF
-file. 
+You can export all the plots by  clicking on the "Save" button on the
+left of the button bar. All plots will then be saved in a PDF file. 
 
 ![](snappshot-02s.png)
 
@@ -186,8 +208,10 @@ file.
 
 ## <a name="export">Analysis Export</a>
 
-The analysis with the information about the graph and the data as well some
-PCA analysis results can be saved using the "File->Save Report" menu entry. The resulting Excel file contains the following sheets:
+You can save the analysis, which includes information about the graph and data,
+some PCA analysis results, as well as the node centrality values, using the 
+"File > Save Report" menu entry. The resulting Excel file contains the following
+sheets:
 
   * "Adjacency matrix" - which node/variable is connect with which, an entry of 1 means they are connecred
   * "Cor pearson/spearman" - the correlation values for all variable pairs
@@ -208,21 +232,28 @@ PCA analysis results can be saved using the "File->Save Report" menu entry. The 
 
 ## <a name="demo">Demo Data</a>
 
-You can load some demo data using the menu point *Demo*. There are currently
-two data sets available:
+You can load demo data by selecting the *Demo* menu option. 
+Currently, there are the following data sets available:
 
-  * the dataset *swiss* containg standardized fertility
-measure and socio-economic indicators for each of 47 French-speaking provinces
-of Switzerland at about 1888.
-  * the dataset *birthwt* from the MASS library with 189 rows and 10 columns.  The data
-were collected at Baystate Medical Center, Springfield, Mass during 1986.
-  * the dataset *environmental* from the lattice package with daily measurements of ozone concentration, wind speed, temperature and solar radiation in New York City from May to September of 1973.
-  * the *Boston* dataset from the MASS library with 506 rows and 14 columns
-  * the dataset *NHANES* from the NHANES library with 7832 rows and 25 columns. 
-The data  are survey data collected by the US National Center for Health  Statistics (NCHS) between 1999 and 2002. This data requires
-the installation of the NHANES data. The installation will be requested if you request the data for the first time.  
+  - The *swiss* dataset contains standardized fertility measures and socio-
+    economic indicators for each of 47 French-speaking provinces of
+    Switzerland at about 1888.
+  - The dataset *birthwt* from the MASS library has 189 birth data samples
+    and 10 variables. The data were collected at Baystate Medical Center,
+    Springfield, Mass during 1986.
+  * the dataset *environmental*
+    from the lattice package contains daily measurements of ozone
+    concentration, wind speed, temperature and solar radiation in New York
+    City from May to September of 1973.
+  * the *Boston* dataset from the MASS library with 506 rows and 14 columns.
+  * the dataset *NHANES*
+    from the NHANES library with 7,832 rows and 25 columns. These are
+    survey data collected by the US National Center for Health Statistics (
+    NCHS) between 1999 and 2002. Installation of the NHANES data library is
+    required. You will prompted to install it the first time you request the data.
 
-The *swiss* and the *birthwt* datasets will have a last column called *Rand* which just contains random data.
+The *swiss* and the *birthwt* datasets will have a last column called *Rand*
+which just contains random data.
 
 Load one of the datasets using the menu point below the *Demo* menu entry.
 
