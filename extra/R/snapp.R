@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-modified ="File stamp: <20260107.2313>"
+modified ="File stamp: <20260112.0903>"
 
 # TODO:
 #   - side by side layout select columns and plot
@@ -66,7 +66,7 @@ if (exists("SCRIPTPATH")) {
     Rsnapp$FILENAME = thisFile()
 }
 Rsnapp$asg_version = "0.10.1"
-Rsnapp$version="0.8.1"
+Rsnapp$version="0.8.2"
 Rsnapp$about = function (this) {
     tkmessageBox(
                  message = paste("snha - gui - St. Nicolas Application\n     @ 2026 Detlef Groth\n   University of Potsdam\n",R.version.string,
@@ -78,7 +78,7 @@ Rsnapp$about = function (this) {
 
 Rsnapp$gui = function (this) {
     this$imageRun=tclVar()
-    this$bootstrap=tclVar(FALSE)    
+    this$bootstrap=tclVar("0")    
     this$corplot=tclVar(FALSE)        
     this$correlations=tclVar(FALSE)
     this$method=tclVar("SNHA")
@@ -197,8 +197,10 @@ Rsnapp$gui = function (this) {
     tkset(tkalpha,"0.05")
     tkpack(tf4,side="top",padx=5,pady=5)
     tklbt=ttklabel(tf4,text="Bootstrap:")
-    tkbbt=ttkcheckbutton(tf4,variable=this$bootstrap,command=this$asgChange)
+    #tkbbt=ttkcheckbutton(tf4,variable=this$bootstrap,command=this$asgChange)
+    tkbbt=ttkcombobox(tf4,textvariable=this$bootstrap,values=c("0","25","50","100","200","500","1000"),width=4)
     tkmethod=ttkcombobox(tf4,textvariable=this$method,values=c("SNHA","Cor","MDScor1","MDScor2","PCAsam","PCAvar","Cluster"),width=8)
+    tkbind(tkbbt,"<<ComboboxSelected>>",this$asgChange)
     #tkset(tkmethod)="SNHA"
     tkbind(tkmethod,"<<ComboboxSelected>>",this$asgChange)
     tkcolor=ttkcombobox(tf4,textvariable=this$colorset,values=c("salmon","skyblue","harmonic","harmleg"),width=8)
@@ -254,7 +256,7 @@ Rsnapp$gui = function (this) {
     tktip(tktsize,"set vertex text size")       
     tktip(tkalpha,"select p-value threshold")
     tktip(tkbrun,"(re)analyse the data")   
-    tktip(tkbbt,"perform resamplings to check edges")
+    tktip(tkbbt,"number of resamplings to check edges")
     tktip(tkbsg,"check single nodes for pairwise correlations")
     this$cbvsize=tkvsize
     this$cbtsize=tktsize    
@@ -304,11 +306,15 @@ Rsnapp$asgChange = function (this) {
              }
              vsize=as.numeric(tclvalue(tkget(this$cbvsize)))
              tsize=as.numeric(tclvalue(tkget(this$cbtsize)))             
-             alpha=as.numeric(tclvalue(tkget(this$cbalpha)))    
-             if (as.numeric(tclvalue(this$bootstrap))==1) {
-                 as=asg.new(data,method=method,alpha=alpha,threshold=0.01,prob=TRUE,check.singles=as.boolean(tclvalue(this$singlecheck)))
+             alpha=as.numeric(tclvalue(tkget(this$cbalpha)))
+             btrap=as.numeric(tclvalue(this$bootstrap))
+             if (btrap>0) {
+                 as=asg.new(data,method=method,alpha=alpha,threshold=0.01,
+                            prob=TRUE,prob.n=btrap,
+                            check.singles=as.boolean(tclvalue(this$singlecheck)))
              } else {
-                 as=asg.new(data,method=method,alpha=alpha,threshold=0.01,check.singles=as.boolean(tclvalue(this$singlecheck)))
+                 as=asg.new(data,method=method,alpha=alpha,threshold=0.01,
+                            check.singles=as.boolean(tclvalue(this$singlecheck)))
              }
              if (!("lay" %in% names(this))) { # | !all(colnames(as$sigma) %in% colnames(data))) {
                  laym=tclvalue(tkget(this$cblay))
@@ -401,11 +407,15 @@ Rsnapp$asgRun = function (this) {
     }
     vsize=as.numeric(tclvalue(tkget(this$cbvsize)))
     tsize=as.numeric(tclvalue(tkget(this$cbtsize)))    
-    alpha=as.numeric(tclvalue(tkget(this$cbalpha)))    
-    if (as.numeric(tclvalue(this$bootstrap))==1) {
-        as=asg.new(data,method=method,alpha=alpha,threshold=0.01,prob=TRUE,check.singles=as.boolean(tclvalue(this$singlecheck)))
+    alpha=as.numeric(tclvalue(tkget(this$cbalpha))) 
+    btrap=as.numeric(tclvalue(this$bootstrap))
+    if (btrap>0) {
+        as=asg.new(data,method=method,alpha=alpha,threshold=0.01,
+                   prob=TRUE,prob.n=btrap,
+                   check.singles=as.boolean(tclvalue(this$singlecheck)))
     } else {
-        as=asg.new(data,method=method,alpha=alpha,threshold=0.01,check.singles=as.boolean(tclvalue(this$singlecheck)))
+        as=asg.new(data,method=method,alpha=alpha,threshold=0.01,
+                   check.singles=as.boolean(tclvalue(this$singlecheck)))
     }
     laym=tclvalue(tkget(this$cblay))
     this$lay=asg.layout(as,mode=laym)
