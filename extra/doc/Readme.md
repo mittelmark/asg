@@ -261,17 +261,18 @@ You can select and deselect the columns by clicking on the column. On the top
 there is an indicator either a checkmark or a cross, to indicate if the column
 is currently selected. You should with the demo column leave all columns checked.
 
-Therafter you switch to the *Analysis* tab of the application. Just use the
-default settings here *Pearson* correlation and a p-value threshold of 0.05.
-And press the analyze button at the lower left. You analyis is sown on the
-image widget on top. Please note, that even if the image quality looks rather
-low, by exporting the image using the save button on top you can create high
-quality graphics. 
+Next, switch to the *Analysis* tab of the application. Use the default
+settings here *Pearson* correlation and a p-value threshold of 0.05. Then,
+press the Analyze button on the left. Your analyis is shown on the image
+widget below of the button bars. Please note that even if the image quality
+appears low, by exporting the image using the Save button at the top you can
+create high quality graphics.
 
-You can play around with the analysis options at the bottom, all graphs will
-be saved. Usually however the settings "Pearson" and p-value threshold of 0.05 are recommended.
+Feel free to experiment with the analysis options, all graphs will be saved.
+However, the settings "Pearson" and a p-value threshold of 0.05 are usually
+recommended.
 
-To export an analysis finally, use the menu point *File-Save Report* and save
+Finally, to export an analysis, use the menu point *File > Save Report* and save
 the analysis as an Excel file.
 
 Here are the column descriptions:
@@ -324,7 +325,9 @@ Here are the column descriptions:
 **NHANES:**
 
 These are resampling data from 2009-2012, please see the package documentaion
-to find out what all the variables are standing for. Not all variables are used as demo data. Here is one online link to read the documentation and to find more about the variable names:
+to find out what all the variables are standing for. Not all variables are
+used as demo data. Here is one online link to read the documentation and to
+find more about the variable names:
 
 https://cran.r-project.org/web/packages/NHANES/NHANES.pdf
   
@@ -332,12 +335,19 @@ https://cran.r-project.org/web/packages/NHANES/NHANES.pdf
 
 ## <a name="summary">Summary</a>
 
-The application provides the major facilities to apply the St. Nicolas House
-Algorithm to your data and to store the analysis and the major graphics on
-your system. If you use the application please cite the URL at github and the following two papers:
+The application provides major facilities for applying the St. Nicolas House
+Analysis (SNHA) algorithm to your data, as well as for storing the analysis
+and major graphics on your system. If you use the application please cite the
+URL at github -  https://github.com/mittelmark/snha-gui and the following two 
+papers:
 
-  * Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in stunted Indonesian children depends directly on parental education and not via a nutrition mediated pathway-Evidence from tracing association chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
-  * Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for Detecting Associations in Interacting Variables - St. Nicolas House Analysis. Int J Env Res Pub Health, 18(4), 1741.
+  - Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in
+    stunted Indonesian children depends directly on parental education and
+    not via a nutrition mediated pathway-Evidence from tracing association
+    chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
+  - Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for
+    Detecting Associations in Interacting Variables - St. Nicolas House
+    Analysis. Int J Env Res Pub Health, 18(4), 1741.
 
 -----
 
@@ -392,6 +402,11 @@ your system. If you use the application please cite the URL at github and the fo
 **Version 0.8.1 - January, 9th 2026**
 
   * automatic removal of variables with zero variance in the analysis
+
+**Version 0.8.2 - January, 12th 2026**
+
+  * documentation fixes
+  * bootstrap number can be selected
 
 -----
 
