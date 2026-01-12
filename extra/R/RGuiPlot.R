@@ -339,6 +339,7 @@ RGuiPlot$navigate = function (this,...) {
         tkconfigure(this$tkForward,state='active')
         tkconfigure(this$tkEnd,state='active')
     }
+    .Tcl("update idletasks")
 }
 
 #' * _RguiPlot$startPlot()_ a simple start plot giving version and time

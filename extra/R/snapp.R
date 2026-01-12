@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-modified ="File stamp: <20260112.0903>"
+modified ="File stamp: <20260112.1026>"
 
 # TODO:
 #   - side by side layout select columns and plot
@@ -351,6 +351,10 @@ Rsnapp$asgChange = function (this) {
                  if (filter != "") {
                      filter=paste(" - filter:",filter)
                  }
+                 btrap=tclvalue(this$bootstrap)
+                 if (btrap != "") {
+                     btrap=paste(" - bootstrap:",btrap)
+                 }
                  col="salmon"
                  lg=NULL
                  if (tclvalue(this$colorset)=="skyblue") {
@@ -367,7 +371,7 @@ Rsnapp$asgChange = function (this) {
                  }
                  this$gplot$plotLabel(plot,as,layout=this$lay,cex=tsize,vertex.size=vsize,edge.width=3,edge.cex=0.8*tsize,vertex.color=col,
                                       edge.text=edge.text,edge.pch=15,legend=lg,
-                                      main=paste("method:",method,"- alpha:",alpha, filter)) 
+                                      main=paste("method:",method,"- alpha:",alpha, btrap, filter)) 
              }
          },
          error=function (e) { this$terror() },
@@ -508,7 +512,7 @@ Rsnapp$saveReport = function (this) {
         writeData(wb,chains,sheet="Chains",rowNames=TRUE)
         
         openxlsx::addWorksheet(wb, "Settings")        
-        df=data.frame(Setting=c("R threshold", "alpha", "method","filter"),Values=c(as.character(this$asg$threshold),as.character(this$asg$alpha),this$asg$method,RGuiColSelect$getFilter()))
+        df=data.frame(Setting=c("R threshold", "alpha", "method","bootstrap","filter"),Values=c(as.character(this$asg$threshold),as.character(this$asg$alpha),this$asg$method,tclvalue(this$bootstrap),RGuiColSelect$getFilter()))
         writeData(wb,df,sheet="Settings",rowNames=FALSE)
         
         openxlsx::addWorksheet(wb, "Data")        

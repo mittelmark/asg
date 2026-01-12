@@ -35,19 +35,18 @@ in the reverse *r(C,B)* > *r(C,A)* then we have an association chain.
 For a detailed background on the algorithm, please refer to the following two
 papers:
 
-  - Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in
-    stunted Indonesian children depends directly on parental education and
-    not via a nutrition mediated pathway-Evidence from tracing association
-    chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
+- Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in
+  stunted Indonesian children depends directly on parental education and
+  not via a nutrition mediated pathway-Evidence from tracing association
+  chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
 
-  - Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for
-    Detecting Associations in Interacting Variables - St. Nicolas House
-    Analysis. Int J Env Res Pub Health, 18(4), 1741.
+- Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for
+  Detecting Associations in Interacting Variables - St. Nicolas House
+  Analysis. Int J Env Res Pub Health, 18(4), 1741.
 
 There exists a R package for the algorithm "snha" which was relased to the
 CRAN repository. To install the package just write the following line into
 your R-console:
-
 
      install.packages("snha")
      
@@ -63,10 +62,8 @@ The application's workflow consists actually of the following steps:
   - Prepare your data in an Excel or Tab file.
   - Open an Excel or Tab file containing the data.
   - Select the appropriate columns for analysis.
-  - Please note that all column names will be abbreviated to the first five
-    letters of the column names to allow correct display in the graph.
-  - Perform the analysis using standard settings (usually Pearson
-    correlation, p- value threshold of 0.05 or 0.1)
+  - Please note that all column names will be abbreviated to the first five letters of the column names to allow correct display in the graph.
+  - Perform the analysis using standard settings (usually Pearson correlation, p- value threshold of 0.05 or 0.1)
   - Export the analysis to an Excel file.
 
 The following sections we will describe the analysis.
@@ -235,22 +232,11 @@ sheets:
 You can load demo data by selecting the *Demo* menu option. 
 Currently, there are the following data sets available:
 
-  - The *swiss* dataset contains standardized fertility measures and socio-
-    economic indicators for each of 47 French-speaking provinces of
-    Switzerland at about 1888.
-  - The dataset *birthwt* from the MASS library has 189 birth data samples
-    and 10 variables. The data were collected at Baystate Medical Center,
-    Springfield, Mass during 1986.
-  * the dataset *environmental*
-    from the lattice package contains daily measurements of ozone
-    concentration, wind speed, temperature and solar radiation in New York
-    City from May to September of 1973.
+  * The *swiss* dataset contains standardized fertility measures and socio-economic indicators for each of 47 French-speaking provinces of Switzerland at about 1888.
+  * The dataset *birthwt* from the MASS library has 189 birth data samples and 10 variables. The data were collected at Baystate Medical Center, Springfield, Mass during 1986.
+  * the dataset *environmental* from the lattice package contains daily measurements of ozone concentration, wind speed, temperature and solar radiation in New York City from May to September of 1973.
   * the *Boston* dataset from the MASS library with 506 rows and 14 columns.
-  * the dataset *NHANES*
-    from the NHANES library with 7,832 rows and 25 columns. These are
-    survey data collected by the US National Center for Health Statistics (
-    NCHS) between 1999 and 2002. Installation of the NHANES data library is
-    required. You will prompted to install it the first time you request the data.
+  * the dataset *NHANES* from the NHANES library with 7,832 rows and 25 columns. These are survey data collected by the US National Center for Health Statistics ( NCHS) between 1999 and 2002. Installation of the NHANES data library is required. You will prompted to install it the first time you request the data.
 
 The *swiss* and the *birthwt* datasets will have a last column called *Rand*
 which just contains random data.
@@ -341,13 +327,8 @@ and major graphics on your system. If you use the application please cite the
 URL at github -  https://github.com/mittelmark/snha-gui and the following two 
 papers:
 
-  - Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in
-    stunted Indonesian children depends directly on parental education and
-    not via a nutrition mediated pathway-Evidence from tracing association
-    chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
-  - Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for
-    Detecting Associations in Interacting Variables - St. Nicolas House
-    Analysis. Int J Env Res Pub Health, 18(4), 1741.
+  * Groth, D., Scheffler, C., & Hermanussen, M. (2019). Body height in stunted Indonesian children depends directly on parental education and not via a nutrition mediated pathway-Evidence from tracing association chains by St. Nicolas House Analysis. Anthr Anz, 76(5), 445-451.
+  * Hermanussen, M., Aßmann, C., & Groth, D. (2021). Chain Reversion for Detecting Associations in Interacting Variables - St. Nicolas House Analysis. Int J Env Res Pub Health, 18(4), 1741.
 
 -----
 
@@ -396,8 +377,7 @@ papers:
   
   * adding support for harmonic centrality in node coloring
   * fixing Excel report saving
-  * redesign of project and new Github project at
-    https://github.com/mittelmark/asg for GUI and package
+  * redesign of project and new Github project at https://github.com/mittelmark/asg for GUI and package
     
 **Version 0.8.1 - January, 9th 2026**
 
@@ -406,7 +386,8 @@ papers:
 **Version 0.8.2 - January, 12th 2026**
 
   * documentation fixes
-  * bootstrap number can be selected
+  * bootstrap number can be selected between 0 and 500
+  * bootstrap value added to report settings tab
 
 -----
 
@@ -428,14 +409,14 @@ papers:
   * rs - threshold for r-square value
   * bootstrap - edge probabilities (done)
   * layout circle, sam, star (with most connected node in the center, partially done)
-  * edit window to do data selection age >= 20 & age <= 30
+  * edit window to do data selection age >= 20 & age <= 30 (done)
   * pdf/png plot with settings at the margin spearman, p-val < 0.05 etc. (done)
   
 -----
 
 ## <a name="license">License</a>
 
-Copyright 2021-2022, Dr. Detlef Groth, University of Potsdam
+Copyright 2021-2026, Dr. Detlef Groth, University of Potsdam
 
 Permission is hereby  granted, free of charge, to any person  obtaining a copy
 of this software and associated  documentation files (the "Software"), to deal
