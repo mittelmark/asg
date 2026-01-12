@@ -1,6 +1,10 @@
 ChangeLog
 ==========
 
+## Version 0.10.2 - 2026-01-12
+
+- only changes in the GUI part
+    
 ## Version 0.10.1 - 2026-01-08
 
 - removing constant variables from SNHA from the beginning

@@ -40,15 +40,15 @@ For users which are not experienced R users there exists a graphical user
 interface which can be installed either using the standalone single R-script
 file or, for Windows systems, using a Windows installer which can be downloaded from here:
 
-[snha-install.exe](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-install.exe)
+[snha-install.exe](https://github.com/mittelmark/asg/releases/download/v0.10.2/snha-install.exe)
 
 ### Linux / MacOS / FreeBSD
 
 For Unix  systems  like  Linux,  FreeBSD  or MacOS  there is as a single  file
 application: 
 
-- Linux/FreeBSD [snha-gui.Rz](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-gui.Rz)
-- MacOS [snha-gui-macos.Rz](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-gui-osx.Rz)
+- Linux/FreeBSD [snha-gui.Rz](https://github.com/mittelmark/asg/releases/download/v0.10.2/snha-gui.Rz)
+- MacOS [snha-gui-macos.Rz](https://github.com/mittelmark/asg/releases/download/v0.10.2/snha-gui-osx.Rz)
 
 Download this file and either run the file directly from a terminal with Rscript like this
 
@@ -80,7 +80,7 @@ output then the GUI but needs the usual knowledge of the R statisical programmin
 You can install the package directly from Github using the following lines of code from within your R-console:
 
 ```
-URL="https://github.com/mittelmark/asg/releases/download/v0.10.1/asg_0.10.1.tar.gz"
+URL="https://github.com/mittelmark/asg/releases/download/v0.10.2/asg_0.10.2.tar.gz"
 install.packages(URL,repos=NULL)
 library(asg)
 ```
@@ -105,6 +105,14 @@ Please use the Github isses page to report problems and to give suggestions:
 ### ChangeLog
 
 * __GUI__
+    * Version 0.8.2 - asg 0.10.2 (2026-01-12) 
+    [Manual](https://github.com/mittelmark/asg/releases/download/v0.10.2/Readme.pdf),
+    [Windows](https://github.com/mittelmark/asg/releases/download/v0.10.2/snha-install.exe),
+    [Linux/FreeBSD](https://github.com/mittelmark/asg/releases/download/v0.10.2/snha-gui.Rz),
+    [MacOS](https://github.com/mittelmark/asg/releases/download/v0.10.2/snha-gui-osx.Rz)
+        * dynamic selection of number of bootstraps
+        * export as well now with mentioning number of bootstraps
+        * spelling and grammar fixes in GUI readme
     * Version 0.8.1 - asg 0.10.1 (2026-01-09) 
     [Manual](https://github.com/mittelmark/asg/releases/download/v0.10.1/Readme.pdf),
     [Windows](https://github.com/mittelmark/asg/releases/download/v0.10.1/snha-install.exe),
@@ -120,6 +128,9 @@ Please use the Github isses page to report problems and to give suggestions:
         * correlation values can be shown on the graph
         
 * __Library:__
+    * version 0.10.2 - 2026-01-12 [Manual](https://github.com/mittelmark/asg/releases/download/v0.10.2/asg-tutorial.pdf)
+      [Package](https://github.com/mittelmark/asg/releases/download/v0.10.2/asg_0.10.2.tar.gz)
+        - no changes in the package R code
     * version 0.10.1 - 2026-01-08 [Manual](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg-tutorial.pdf)
       [Package](https://github.com/mittelmark/asg/releases/download/v0.10.1/asg_0.10.1.tar.gz)
         - remove variables with zero variance automatically

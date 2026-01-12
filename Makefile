@@ -33,9 +33,6 @@ check:  build ## build and check tar.gz
 	R CMD check $(PKG)_$(VERSION).tar.gz
 	#echo 'library(evaluate);library(devtools); check("$(pkg)");' | R --slave	
 
-doc:
-	R CMD Rdconv -t txt $(PKG)/man/$(func).Rd | less
-
 vignette:
 	#echo '.libPaths(c("~/workspace/delfgroth/myr/rlibs/",.libPaths())); library(devtools); devtools::build_vignettes("$(pkg)");' | R --slave
 	cd vignettes && echo "library(knitr);knitr::knit('$(PKG).Rmd');" | R --slave

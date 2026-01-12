@@ -3,7 +3,7 @@ title: "snha - Application for the St. Nicolas House Analysis Algorithm"
 shorttitle: "St. Nicolas App"
 author: 
 - Detlef Groth, University of Potsdam
-date: 2022-02-16
+date: 2026-01-12
 ---
 
 ## <a name="toc">Table of Contents</a>
