@@ -6,3 +6,5 @@ snha-win/*
 .*.xlsx.*
 .*png
 .*exe
+.*pdf
+.*Rz
